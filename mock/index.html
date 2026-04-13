@@ -24,11 +24,9 @@
       --warning: #e3b341;
       --error: #f85149;
     }
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
-
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      font-family: 'Segoe UI', system-ui, sans-serif;
       background: var(--bg);
       color: var(--text);
       height: 100vh;
@@ -37,1592 +35,1293 @@
       overflow: hidden;
     }
 
-    /* ══════════════════════════════
-       Header
-    ══════════════════════════════ */
+    /* ── Header ── */
     header {
       background: var(--surface);
       border-bottom: 1px solid var(--border);
-      padding: 0 20px;
+      padding: 0 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      height: 52px;
+      height: 48px;
       flex-shrink: 0;
-      gap: 16px;
-    }
-
-    .logo {
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--accent);
-      letter-spacing: -0.5px;
-      white-space: nowrap;
-    }
-    .logo span { color: #fff; }
-
-    .tagline {
-      font-size: 11px;
-      color: var(--text-muted);
-      margin-top: 1px;
-      white-space: nowrap;
-    }
-
-    /* ── GitHub 連携エリア (ヘッダー右) ── */
-    .gh-area {
-      display: flex;
-      align-items: center;
       gap: 12px;
-      flex-shrink: 0;
     }
+    .header-left { display: flex; align-items: center; gap: 12px; }
+    .logo { font-size: 17px; font-weight: 700; color: var(--accent); letter-spacing: -.5px; white-space: nowrap; }
+    .logo span { color: #fff; }
+    .tagline { font-size: 11px; color: var(--text-muted); }
 
-    /* トグルスイッチ */
-    .toggle-wrap {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      cursor: pointer;
-      user-select: none;
+    /* Folder button */
+    .btn-folder {
+      display: flex; align-items: center; gap: 6px;
+      background: #21262d; border: 1px solid #444c56;
+      color: var(--text); padding: 4px 11px;
+      border-radius: 6px; font-size: 12px; cursor: pointer;
+      transition: background .15s; white-space: nowrap;
     }
+    .btn-folder:hover { background: #30363d; }
+    .btn-folder.connected { border-color: var(--success); color: var(--success); }
+    .folder-name { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    .toggle-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 38px;
-      height: 22px;
-      flex-shrink: 0;
-    }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-      position: absolute;
-    }
-
-    .toggle-track {
-      position: absolute;
-      inset: 0;
-      background: #30363d;
-      border-radius: 22px;
-      transition: background 0.2s;
-      cursor: pointer;
-    }
-
-    .toggle-thumb {
-      position: absolute;
-      width: 16px;
-      height: 16px;
-      background: #fff;
-      border-radius: 50%;
-      top: 3px;
-      left: 3px;
-      transition: transform 0.2s;
-      pointer-events: none;
-    }
-
+    /* GitHub area */
+    .gh-area { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .toggle-wrap { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
+    .toggle-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+    .toggle-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track { position: absolute; inset: 0; background: #30363d; border-radius: 20px; transition: background .2s; cursor: pointer; }
+    .toggle-thumb { position: absolute; width: 14px; height: 14px; background: #fff; border-radius: 50%; top: 3px; left: 3px; transition: transform .2s; pointer-events: none; }
     .toggle-switch input:checked ~ .toggle-track { background: var(--accent); }
     .toggle-switch input:checked ~ .toggle-thumb { transform: translateX(16px); }
-
-    /* ログインボタン */
-    .btn-gh-login {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      background: #21262d;
-      border: 1px solid #444c56;
-      color: var(--text);
-      padding: 5px 13px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s, border-color 0.15s;
-      white-space: nowrap;
-    }
-    .btn-gh-login:hover { background: #30363d; border-color: #6e7681; }
-    .btn-gh-login svg { flex-shrink: 0; }
-
-    /* ログイン後ユーザーパネル */
-    .gh-user-panel {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .gh-avatar {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 1px solid #444;
-    }
-
-    .gh-username {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-    }
-
-    .gh-sep {
-      width: 1px;
-      height: 18px;
-      background: var(--border);
-      flex-shrink: 0;
-    }
-
-    /* リポジトリセレクタ */
-    .repo-select-wrap {
-      position: relative;
-    }
-
-    .repo-select {
-      appearance: none;
-      background: #21262d;
-      border: 1px solid #444c56;
-      color: var(--text);
-      padding: 4px 28px 4px 10px;
-      border-radius: 6px;
-      font-size: 12px;
-      cursor: pointer;
-      min-width: 180px;
-      max-width: 240px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
-    .repo-select:hover, .repo-select:focus { border-color: var(--accent); }
-
-    .repo-select-caret {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      pointer-events: none;
-      color: var(--text-muted);
-      font-size: 10px;
-    }
-
-    .btn-logout {
-      background: transparent;
-      border: 1px solid #444c56;
-      color: var(--text-muted);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.15s;
-      white-space: nowrap;
-    }
+    .btn-gh-login { display: flex; align-items: center; gap: 6px; background: #21262d; border: 1px solid #444c56; color: var(--text); padding: 4px 11px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: background .15s; white-space: nowrap; }
+    .btn-gh-login:hover { background: #30363d; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 13px; height: 13px; border: 2px solid rgba(88,166,255,.3); border-top-color: var(--accent); border-radius: 50%; animation: spin .7s linear infinite; flex-shrink: 0; }
+    .gh-loading { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+    .gh-user-panel { display: flex; align-items: center; gap: 8px; }
+    .gh-avatar { width: 24px; height: 24px; border-radius: 50%; border: 1px solid #444; }
+    .gh-username { font-size: 12px; font-weight: 600; white-space: nowrap; }
+    .gh-sep { width: 1px; height: 16px; background: var(--border); flex-shrink: 0; }
+    .repo-select-wrap { position: relative; }
+    .repo-select { appearance: none; background: #21262d; border: 1px solid #444c56; color: var(--text); padding: 4px 24px 4px 9px; border-radius: 6px; font-size: 12px; cursor: pointer; min-width: 160px; max-width: 220px; outline: none; }
+    .repo-select:focus { border-color: var(--accent); }
+    .repo-select-caret { position: absolute; right: 7px; top: 50%; transform: translateY(-50%); pointer-events: none; color: var(--text-muted); font-size: 10px; }
+    .btn-logout { background: transparent; border: 1px solid #444c56; color: var(--text-muted); padding: 3px 9px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all .15s; white-space: nowrap; }
     .btn-logout:hover { border-color: var(--error); color: var(--error); }
 
-    /* ローディングスピナー */
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .spinner {
-      width: 14px; height: 14px;
-      border: 2px solid rgba(88,166,255,0.3);
-      border-top-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 0.7s linear infinite;
-      flex-shrink: 0;
-    }
-
-    .gh-loading {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 12px;
-      color: var(--text-muted);
-    }
-
-    /* ══════════════════════════════
-       Login Modal
-    ══════════════════════════════ */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      backdrop-filter: blur(4px);
-    }
-
-    .modal-overlay.hidden { display: none; }
-
-    .modal {
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 12px;
-      width: 420px;
-      max-width: calc(100vw - 32px);
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      animation: modalIn 0.2s ease;
-    }
-
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-      to   { opacity: 1; transform: scale(1) translateY(0); }
-    }
-
-    .modal-header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
+    /* ── Browser compat banner ── */
+    .compat-banner {
+      background: rgba(248,81,73,.12);
+      border-bottom: 1px solid rgba(248,81,73,.3);
+      padding: 6px 16px;
+      font-size: 11px;
+      color: #f85149;
       text-align: center;
-    }
-
-    .modal-gh-icon {
-      width: 48px;
-      height: 48px;
-      background: #21262d;
-      border: 1px solid #30363d;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .modal-title {
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .modal-desc {
-      font-size: 13px;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    /* PAT instructions */
-    .pat-steps {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .pat-step {
-      font-size: 12px;
-      color: var(--text-muted);
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      line-height: 1.4;
-    }
-
-    .pat-step-num {
-      width: 16px;
-      height: 16px;
-      border-radius: 50%;
-      background: #21262d;
-      border: 1px solid #444;
-      font-size: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       flex-shrink: 0;
-      color: var(--text-muted);
-      margin-top: 1px;
     }
+    .compat-banner.hidden { display: none; }
 
-    .pat-link {
-      color: var(--accent);
-      cursor: pointer;
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
-    /* Token input */
-    .token-input-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .token-label {
-      font-size: 12px;
-      color: var(--text-muted);
-      font-weight: 500;
-    }
-
-    .token-input {
-      width: 100%;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      color: var(--text);
-      padding: 8px 12px;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      outline: none;
-      transition: border-color 0.15s;
-    }
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
+    .modal-overlay.hidden { display: none !important; }
+    .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 420px; max-width: calc(100vw - 32px); padding: 26px; display: flex; flex-direction: column; gap: 18px; }
+    @keyframes modalIn { from { opacity:0; transform:scale(.95) translateY(-8px); } to { opacity:1; transform:scale(1) translateY(0); } }
+    .modal { animation: modalIn .2s ease; }
+    .modal-header { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
+    .modal-gh-icon { width: 46px; height: 46px; background: #21262d; border: 1px solid #30363d; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .modal-title { font-size: 17px; font-weight: 600; }
+    .modal-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .pat-steps { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 11px 13px; display: flex; flex-direction: column; gap: 6px; }
+    .pat-step { font-size: 12px; color: var(--text-muted); display: flex; gap: 7px; align-items: flex-start; line-height: 1.4; }
+    .pat-step-num { width: 15px; height: 15px; border-radius: 50%; background: #21262d; border: 1px solid #444; font-size: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+    .pat-link { color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+    .token-input-wrap { display: flex; flex-direction: column; gap: 5px; }
+    .token-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+    .token-input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: var(--text); padding: 7px 11px; font-family: 'Courier New', monospace; font-size: 13px; outline: none; }
     .token-input:focus { border-color: var(--accent); }
     .token-input::placeholder { color: #444; }
-
-    .modal-error {
-      font-size: 12px;
-      color: var(--error);
-      display: none;
-      padding: 6px 10px;
-      background: rgba(248,81,73,0.1);
-      border: 1px solid rgba(248,81,73,0.3);
-      border-radius: 6px;
-    }
-
-    /* Modal buttons */
-    .modal-actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn-primary {
-      flex: 1;
-      background: var(--accent);
-      color: #000;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: opacity 0.15s;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-    .btn-primary:hover { opacity: 0.85; }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-secondary {
-      background: #21262d;
-      color: var(--text);
-      border: 1px solid #444c56;
-      padding: 8px 16px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s;
-    }
+    .modal-error { font-size: 12px; color: var(--error); display: none; padding: 5px 9px; background: rgba(248,81,73,.1); border: 1px solid rgba(248,81,73,.3); border-radius: 6px; }
+    .modal-actions { display: flex; gap: 8px; }
+    .btn-primary { flex: 1; background: var(--accent); color: #000; border: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 5px; }
+    .btn-primary:hover { opacity: .85; }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-secondary { background: #21262d; color: var(--text); border: 1px solid #444c56; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
     .btn-secondary:hover { background: #30363d; }
 
-    /* ══════════════════════════════
-       Main
-    ══════════════════════════════ */
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      padding: 12px 16px;
-      gap: 10px;
-    }
+    /* ── App body ── */
+    .app-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 10px 14px; gap: 8px; }
 
-    .flow-row {
-      display: flex;
-      align-items: stretch;
-      gap: 0;
-      flex: 1;
-      min-height: 0;
-    }
-
-    .zone {
-      flex: 1;
-      border-radius: 10px;
-      border: 2px solid;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-      transition: border-color 0.3s;
-    }
-
+    /* Flow row */
+    .flow-row { display: flex; align-items: stretch; flex: 1; min-height: 0; }
+    .zone { flex: 1; border-radius: 10px; border: 2px solid; display: flex; flex-direction: column; overflow: hidden; }
     .zone-working { background: var(--working-bg); border-color: var(--working-border); }
     .zone-staging { background: var(--staging-bg); border-color: var(--staging-border); }
     .zone-local   { background: var(--local-bg);   border-color: var(--local-border);   }
     .zone-remote  { background: var(--remote-bg);  border-color: var(--remote-border);  }
+    .zone-remote.gh-connected { box-shadow: 0 0 0 1px rgba(124,58,237,.4); }
+    .zone-header { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .zone-header-r { margin-left: auto; }
+    .zone-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(124,58,237,.2); color: #a78bfa; font-weight: 600; border: 1px solid rgba(124,58,237,.3); }
+    .zone-icon { font-size: 14px; }
+    .zone-title { font-weight: 600; font-size: 12px; line-height: 1.2; }
+    .zone-sub { font-size: 10px; color: var(--text-muted); }
+    .zone-body { flex: 1; padding: 7px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 
-    /* リモートゾーンが実際のGitHubに接続されているとき */
-    .zone-remote.gh-connected { border-color: #7c3aed; box-shadow: 0 0 0 1px rgba(124,58,237,0.3); }
+    /* Arrows */
+    .arrow-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; flex-shrink: 0; gap: 2px; }
+    .arrow-cmd { font-size: 8px; font-family: monospace; color: rgba(255,255,255,.3); text-align: center; white-space: nowrap; }
+    .arrow-sym { font-size: 20px; color: rgba(255,255,255,.18); line-height: 1; }
 
-    .zone-header {
-      padding: 9px 13px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .zone-header-right {
-      margin-left: auto;
-    }
-
-    .zone-badge {
-      font-size: 9px;
-      padding: 1px 6px;
-      border-radius: 4px;
-      background: rgba(124,58,237,0.2);
-      color: #a78bfa;
-      font-weight: 600;
-      border: 1px solid rgba(124,58,237,0.4);
-    }
-
-    .zone-icon { font-size: 15px; }
-
-    .zone-title {
-      font-weight: 600;
-      font-size: 13px;
-      line-height: 1.2;
-    }
-
-    .zone-sub {
-      font-size: 10px;
-      color: var(--text-muted);
-    }
-
-    .zone-body {
-      flex: 1;
-      padding: 8px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    /* ── Arrows ── */
-    .arrow-col {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 52px;
-      flex-shrink: 0;
-      gap: 2px;
-      padding: 0 2px;
-    }
-
-    .arrow-cmd {
-      font-size: 9px;
-      font-family: monospace;
-      color: rgba(255,255,255,0.35);
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .arrow-sym {
-      font-size: 22px;
-      color: rgba(255,255,255,0.2);
-      line-height: 1;
-    }
-
-    /* ── File cards ── */
-    @keyframes cardIn {
-      from { opacity: 0; transform: translateY(-8px) scale(0.97); }
-      to   { opacity: 1; transform: translateY(0) scale(1); }
-    }
-
+    /* Cards */
+    @keyframes cardIn { from { opacity:0; transform:translateY(-6px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
     @keyframes pulseFx {
-      0%   { box-shadow: 0 0 0 0 rgba(88,166,255,0.5); }
+      0%   { box-shadow: 0 0 0 0 rgba(88,166,255,.5); }
       70%  { box-shadow: 0 0 0 6px rgba(88,166,255,0); }
       100% { box-shadow: 0 0 0 0 rgba(88,166,255,0); }
     }
+    .file-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 5px; padding: 5px 9px; display: flex; align-items: center; gap: 6px; font-size: 11px; animation: cardIn .2s ease; }
+    .file-card.highlight { animation: cardIn .2s ease, pulseFx .7s ease .1s; }
+    .file-card.is-deleted { opacity: .65; }
+    .fc-ico  { font-size: 12px; flex-shrink: 0; }
+    .fc-name { font-family: 'Courier New', monospace; flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fc-name.del { text-decoration: line-through; }
+    .fc-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .fc-badge.untracked { background: rgba(86,211,100,.2);  color: #56d364; }
+    .fc-badge.modified  { background: rgba(227,179,65,.2);  color: #e3b341; }
+    .fc-badge.deleted   { background: rgba(248,81,73,.2);   color: #f85149; }
+    .fc-badge.staged    { background: rgba(88,166,255,.2);  color: var(--accent); }
+    .fc-badge.staged-del{ background: rgba(248,81,73,.15);  color: #f85149; border: 1px solid rgba(248,81,73,.3); }
 
-    .file-card {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      padding: 7px 10px;
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      font-size: 12px;
-      animation: cardIn 0.25s ease;
-    }
-
-    .file-card.highlight { animation: cardIn 0.25s ease, pulseFx 0.7s ease 0.1s; }
-    .file-ico  { font-size: 13px; }
-    .file-name { font-family: 'Courier New', monospace; flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-    .badge-mod { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700;
-                 background: rgba(248,81,73,0.2); color: #f85149; white-space: nowrap; }
-    .badge-stg { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700;
-                 background: rgba(86,211,100,0.2); color: #56d364; white-space: nowrap; }
-    .badge-dir { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700;
-                 background: rgba(88,166,255,0.15); color: var(--accent); white-space: nowrap; }
-
-    /* ── Commit cards ── */
-    .commit-card {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 6px;
-      padding: 7px 10px;
-      font-size: 12px;
-      animation: cardIn 0.25s ease;
-    }
-
-    .commit-card.highlight { animation: cardIn 0.25s ease, pulseFx 0.7s ease 0.1s; }
-    .commit-hash  { font-family: monospace; color: var(--accent); font-size: 11px; margin-bottom: 2px; }
-    .commit-msg   { font-size: 12px; margin-bottom: 3px; }
+    /* Commit cards */
+    .commit-card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 5px; padding: 6px 10px; font-size: 11px; display: flex; flex-direction: column; gap: 3px; animation: cardIn .2s ease; }
+    .commit-card.highlight { animation: cardIn .2s ease, pulseFx .7s ease .1s; }
+    .commit-hash { font-family: 'Courier New', monospace; color: var(--accent); font-size: 10px; }
+    .commit-msg  { color: var(--text); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .commit-files { font-size: 10px; color: var(--text-muted); }
-    .commit-author{ font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 2px; }
-    .commit-author img { width: 12px; height: 12px; border-radius: 50%; }
 
-    /* ── Empty state ── */
-    .empty {
-      color: rgba(255,255,255,0.2);
-      font-size: 11px;
-      text-align: center;
-      margin: auto;
-      line-height: 1.8;
-    }
-
-    /* ── Info panel ── */
-    .info-panel {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      min-height: 64px;
-    }
-
-    .info-row {
-      display: flex;
-      gap: 8px;
-      align-items: flex-start;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-
-    .info-ico  { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
-    .info-body { flex: 1; }
-    .info-body strong { color: var(--accent); }
-    .info-next { color: var(--warning); }
-    .info-err  { color: var(--error); }
-
-    @keyframes shake {
-      0%,100% { transform: translateX(0); }
-      25%     { transform: translateX(-5px); }
-      75%     { transform: translateX(5px); }
-    }
-    .shake { animation: shake 0.25s ease; }
-
-    /* ── Suggestion chips ── */
-    .chips {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-
-    .chip {
-      font-size: 11px;
-      font-family: monospace;
-      background: rgba(88,166,255,0.1);
-      border: 1px solid rgba(88,166,255,0.25);
-      color: var(--accent);
-      padding: 3px 9px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: background 0.15s;
-      user-select: none;
-    }
-    .chip:hover { background: rgba(88,166,255,0.2); }
+    /* Empty zone hint */
+    .zone-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; opacity: .25; padding: 20px; text-align: center; }
+    .zone-empty-icon { font-size: 22px; }
+    .zone-empty-text { font-size: 10px; line-height: 1.5; }
 
     /* ── Terminal ── */
-    .terminal {
-      background: #000;
-      border: 1px solid #333;
-      border-radius: 8px;
-      padding: 9px 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
+    .terminal-bar {
+      height: 130px; flex-shrink: 0;
+      background: #0d1117; border: 1px solid var(--border);
+      border-radius: 8px; display: flex; flex-direction: column;
+      overflow: hidden;
     }
-
-    .prompt {
-      color: var(--success);
-      font-family: monospace;
-      font-size: 13px;
-      white-space: nowrap;
-      flex-shrink: 0;
+    .term-titlebar {
+      display: flex; align-items: center; padding: 5px 10px;
+      background: #161b22; border-bottom: 1px solid var(--border);
+      gap: 6px; flex-shrink: 0;
     }
+    .term-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .term-dot.r { background: #f85149; } .term-dot.y { background: #e3b341; } .term-dot.g { background: #56d364; }
+    .term-title { font-size: 10px; color: var(--text-muted); margin-left: 4px; }
+    .term-mode { margin-left: auto; font-size: 9px; color: var(--text-muted); padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,.06); }
+    .term-mode.live { color: var(--success); background: rgba(86,211,100,.1); }
+    .term-body { flex: 1; overflow-y: auto; padding: 5px 10px; display: flex; flex-direction: column; gap: 1px; }
+    .term-line { font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.5; }
+    .term-line.prompt { color: var(--success); }
+    .term-line.output { color: var(--text-muted); }
+    .term-line.error  { color: var(--error); }
+    .term-line.info   { color: var(--accent); }
+    .term-input-row { display: flex; align-items: center; padding: 3px 10px; border-top: 1px solid rgba(255,255,255,.05); gap: 5px; flex-shrink: 0; }
+    .term-ps1 { font-family: 'Courier New', monospace; font-size: 11px; color: var(--success); flex-shrink: 0; }
+    .term-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Courier New', monospace; font-size: 11px; }
 
-    .term-input {
-      flex: 1;
-      background: transparent;
-      border: none;
-      outline: none;
-      color: var(--text);
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      caret-color: var(--text);
+    /* ── Watch indicator ── */
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
+    .watch-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: blink 1.4s ease-in-out infinite; flex-shrink: 0; }
+    .watch-info { font-size: 10px; color: var(--text-muted); }
+
+    /* ── Status bar ── */
+    .statusbar {
+      height: 22px; flex-shrink: 0;
+      background: #1c2128; border-top: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 12px; gap: 14px;
     }
-
-    .term-hint {
-      font-size: 10px;
-      color: #444;
-      font-family: monospace;
-      white-space: nowrap;
-    }
-
-    .hidden { display: none !important; }
+    .sb-item { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
+    .sb-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .sb-dot.green { background: var(--success); }
+    .sb-dot.yellow { background: var(--warning); }
+    .sb-dot.blue { background: var(--accent); }
+    .sb-dot.gray { background: #444; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════
-     Login Modal
-══════════════════════════════ -->
-<div id="modal-overlay" class="modal-overlay hidden" onclick="onOverlayClick(event)">
-  <div class="modal" onclick="event.stopPropagation()">
+<!-- ── GitHub PAT Modal ── -->
+<div class="modal-overlay hidden" id="ghModal">
+  <div class="modal">
     <div class="modal-header">
       <div class="modal-gh-icon">
-        <svg width="28" height="28" viewBox="0 0 16 16" fill="white">
-          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
-            0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
-            -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
-            .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
-            -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0
-            1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
-            1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
-            1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-        </svg>
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
       </div>
-      <div class="modal-title">GitHubでログイン</div>
-      <div class="modal-desc">
-        Personal Access Token を使ってGitHubアカウントに接続し、<br>
-        実際のリポジトリのファイルを読み込みます。
-      </div>
+      <div class="modal-title">GitHubと連携</div>
+      <div class="modal-desc">Personal Access Token (PAT) を入力してGitHubアカウントと連携します。<br>トークンはブラウザにのみ保存され、外部に送信されません。</div>
     </div>
-
     <div class="pat-steps">
-      <div class="pat-step">
-        <div class="pat-step-num">1</div>
-        <div>GitHub にログインし
-          <span class="pat-link" onclick="openGhSettings()">
-            Settings → Developer settings → Personal access tokens → Tokens (classic)
-          </span>
-          を開く
-        </div>
-      </div>
-      <div class="pat-step">
-        <div class="pat-step-num">2</div>
-        <div>「Generate new token (classic)」をクリック</div>
-      </div>
-      <div class="pat-step">
-        <div class="pat-step-num">3</div>
-        <div>スコープ <strong style="color:var(--text)">repo</strong> にチェックを入れてトークンを生成</div>
-      </div>
-      <div class="pat-step">
-        <div class="pat-step-num">4</div>
-        <div>生成されたトークンをコピーして下に貼り付ける</div>
-      </div>
+      <div class="pat-step"><div class="pat-step-num">1</div><span>GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)</span></div>
+      <div class="pat-step"><div class="pat-step-num">2</div><span>「Generate new token (classic)」をクリック</span></div>
+      <div class="pat-step"><div class="pat-step-num">3</div><span>スコープ: <strong>repo</strong>・<strong>read:user</strong> にチェック</span></div>
     </div>
-
     <div class="token-input-wrap">
       <div class="token-label">Personal Access Token</div>
-      <input
-        id="token-input"
-        class="token-input"
-        type="password"
-        placeholder="ghp_xxxxxxxxxxxxxxxxxxxx"
-        autocomplete="off"
-        spellcheck="false"
-      >
-      <div id="modal-error" class="modal-error"></div>
+      <input class="token-input" id="patInput" type="password" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
     </div>
-
+    <div class="modal-error" id="modalError"></div>
     <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeModal()">キャンセル</button>
-      <button id="login-btn" class="btn-primary" onclick="doLogin()">
-        <span id="login-btn-label">ログイン</span>
+      <button class="btn-secondary" id="btnModalCancel">キャンセル</button>
+      <button class="btn-primary" id="btnModalConnect">
+        <span id="modalBtnLabel">連携する</span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     Header
-══════════════════════════════ -->
+<!-- ── Header ── -->
 <header>
-  <div style="flex-shrink:0">
+  <div class="header-left">
     <div class="logo">Git<span>GUI</span></div>
-    <div class="tagline">Gitコマンドの動きを視覚的に学ぼう</div>
+    <div class="tagline">Gitの動きを視覚的に学ぼう</div>
+    <div id="folderArea" style="display:flex;align-items:center;gap:8px;">
+      <button class="btn-folder" id="btnOpenFolder" onclick="openFolder()">
+        <span>📁</span> フォルダを開く
+      </button>
+      <span class="folder-name hidden" id="folderName"></span>
+    </div>
   </div>
-
-  <div class="gh-area">
-
-    <!-- トグルスイッチ -->
-    <label class="toggle-wrap" title="GitHub連携を切り替える">
+  <div class="gh-area" id="ghArea">
+    <label class="toggle-wrap">
       <span class="toggle-label">GitHub連携</span>
       <div class="toggle-switch">
-        <input type="checkbox" id="gh-toggle" onchange="onToggleChange(this.checked)">
+        <input type="checkbox" id="ghToggle" onchange="onGhToggle(this.checked)">
         <div class="toggle-track"></div>
         <div class="toggle-thumb"></div>
       </div>
     </label>
-
-    <!-- 未ログイン時のログインボタン (toggle ON 時のみ表示) -->
-    <button id="gh-login-btn" class="btn-gh-login hidden" onclick="openModal()">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
-          0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
-          -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
-          .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15
-          -.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0
-          1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82
-          1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01
-          1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-      </svg>
-      GitHubでログイン
-    </button>
-
-    <!-- ローディング状態 -->
-    <div id="gh-loading" class="gh-loading hidden">
-      <div class="spinner"></div>
-      <span>接続中...</span>
-    </div>
-
-    <!-- ログイン後のユーザーパネル -->
-    <div id="gh-user-panel" class="gh-user-panel hidden">
-      <img id="gh-avatar" class="gh-avatar" src="" alt="">
-      <span id="gh-username" class="gh-username"></span>
-      <div class="gh-sep"></div>
-      <div class="repo-select-wrap">
-        <select id="repo-select" class="repo-select" onchange="onRepoSelect(this.value)">
-          <option value="">リポジトリを選択...</option>
-        </select>
-        <span class="repo-select-caret">▾</span>
+    <div id="ghAuthArea" class="hidden">
+      <button class="btn-gh-login hidden" id="btnGhLogin" onclick="openGhModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        GitHubにログイン
+      </button>
+      <div class="gh-loading hidden" id="ghLoading"><div class="spinner"></div>認証中...</div>
+      <div class="gh-user-panel hidden" id="ghUserPanel">
+        <img class="gh-avatar" id="ghAvatar" src="" alt="">
+        <span class="gh-username" id="ghUsername"></span>
+        <div class="gh-sep"></div>
+        <div class="repo-select-wrap">
+          <select class="repo-select" id="repoSelect" onchange="onRepoSelect(this.value)">
+            <option value="">リポジトリを選択...</option>
+          </select>
+          <span class="repo-select-caret">▾</span>
+        </div>
+        <button class="btn-logout" onclick="ghLogout()">ログアウト</button>
       </div>
-      <button class="btn-logout" onclick="doLogout()">ログアウト</button>
     </div>
-
   </div>
 </header>
 
-<!-- ══════════════════════════════
-     Main
-══════════════════════════════ -->
-<div class="main">
+<!-- ── Browser compat banner ── -->
+<div class="compat-banner hidden" id="compatBanner">
+  ⚠ お使いのブラウザはFile System Access APIに対応していません。Chrome / Edgeをご利用ください。フォルダ監視機能はデモモードで動作します。
+</div>
 
+<!-- ── App Body ── -->
+<div class="app-body">
+
+  <!-- Flow row: 4 zones -->
   <div class="flow-row">
 
-    <!-- 作業ディレクトリ -->
-    <div class="zone zone-working">
+    <!-- Working Directory -->
+    <div class="zone zone-working" id="zone-wd">
       <div class="zone-header">
-        <span class="zone-icon">📁</span>
+        <span class="zone-icon">💻</span>
         <div>
           <div class="zone-title">作業ディレクトリ</div>
           <div class="zone-sub">Working Directory</div>
         </div>
-      </div>
-      <div class="zone-body" id="wd"></div>
-    </div>
-
-    <div class="arrow-col">
-      <span class="arrow-cmd">git add →</span>
-      <span class="arrow-sym">⇄</span>
-      <span class="arrow-cmd">← restore</span>
-    </div>
-
-    <!-- ステージング -->
-    <div class="zone zone-staging">
-      <div class="zone-header">
-        <span class="zone-icon">📋</span>
-        <div>
-          <div class="zone-title">ステージング</div>
-          <div class="zone-sub">Staging Area / Index</div>
+        <div class="zone-header-r" id="watchIndicator" style="display:none;align-items:center;gap:5px;">
+          <div class="watch-dot"></div>
+          <span class="watch-info">監視中</span>
         </div>
       </div>
-      <div class="zone-body" id="sa"></div>
+      <div class="zone-body" id="wd-body">
+        <div class="zone-empty" id="wd-empty">
+          <div class="zone-empty-icon">📁</div>
+          <div class="zone-empty-text">「フォルダを開く」でローカルリポジトリを<br>選択するとファイルが表示されます</div>
+        </div>
+      </div>
     </div>
 
+    <!-- Arrow WD→SA -->
     <div class="arrow-col">
-      <span class="arrow-cmd">git commit →</span>
-      <span class="arrow-sym">⇄</span>
-      <span class="arrow-cmd">← reset</span>
+      <div class="arrow-cmd">git add</div>
+      <div class="arrow-sym">→</div>
     </div>
 
-    <!-- ローカルリポジトリ -->
-    <div class="zone zone-local">
+    <!-- Staging Area -->
+    <div class="zone zone-staging" id="zone-sa">
       <div class="zone-header">
-        <span class="zone-icon">🏠</span>
+        <span class="zone-icon">📦</span>
+        <div>
+          <div class="zone-title">ステージングエリア</div>
+          <div class="zone-sub">Staging Area (Index)</div>
+        </div>
+      </div>
+      <div class="zone-body" id="sa-body">
+        <div class="zone-empty" id="sa-empty">
+          <div class="zone-empty-icon">📦</div>
+          <div class="zone-empty-text">git add したファイルが<br>ここに移動します</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrow SA→LR -->
+    <div class="arrow-col">
+      <div class="arrow-cmd">git commit</div>
+      <div class="arrow-sym">→</div>
+    </div>
+
+    <!-- Local Repository -->
+    <div class="zone zone-local" id="zone-lr">
+      <div class="zone-header">
+        <span class="zone-icon">🗄</span>
         <div>
           <div class="zone-title">ローカルリポジトリ</div>
           <div class="zone-sub">Local Repository</div>
         </div>
       </div>
-      <div class="zone-body" id="lr"></div>
+      <div class="zone-body" id="lr-body">
+        <div class="zone-empty" id="lr-empty">
+          <div class="zone-empty-icon">🗄</div>
+          <div class="zone-empty-text">git commit するとここに<br>コミットが積まれます</div>
+        </div>
+      </div>
     </div>
 
+    <!-- Arrow LR→RR -->
     <div class="arrow-col">
-      <span class="arrow-cmd">git push →</span>
-      <span class="arrow-sym">⇄</span>
-      <span class="arrow-cmd">← pull</span>
+      <div class="arrow-cmd">git push</div>
+      <div class="arrow-sym">→</div>
     </div>
 
-    <!-- リモートリポジトリ -->
-    <div class="zone zone-remote" id="zone-remote">
+    <!-- Remote Repository -->
+    <div class="zone zone-remote" id="zone-rr">
       <div class="zone-header">
         <span class="zone-icon">☁️</span>
         <div>
           <div class="zone-title">リモートリポジトリ</div>
-          <div class="zone-sub" id="remote-sub">Remote Repository (origin)</div>
+          <div class="zone-sub">Remote Repository</div>
         </div>
-        <div class="zone-header-right">
-          <span id="gh-connected-badge" class="zone-badge hidden">GitHub</span>
+        <div class="zone-header-r">
+          <span class="zone-badge" id="remoteBadge" style="display:none">GitHub</span>
         </div>
       </div>
-      <div class="zone-body" id="rr"></div>
+      <div class="zone-body" id="rr-body">
+        <div class="zone-empty" id="rr-empty">
+          <div class="zone-empty-icon">☁️</div>
+          <div class="zone-empty-text">git push するとここに<br>反映されます</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /flow-row -->
+
+  <!-- Terminal -->
+  <div class="terminal-bar">
+    <div class="term-titlebar">
+      <div class="term-dot r"></div>
+      <div class="term-dot y"></div>
+      <div class="term-dot g"></div>
+      <span class="term-title">Terminal</span>
+      <span class="term-mode" id="termMode">デモモード</span>
+    </div>
+    <div class="term-body" id="termBody"></div>
+    <div class="term-input-row">
+      <span class="term-ps1" id="termPs1">$ </span>
+      <input class="term-input" id="termInput" placeholder="git コマンドを入力 (デモ)" autocomplete="off" onkeydown="onTermKey(event)">
     </div>
   </div>
 
-  <!-- 情報パネル -->
-  <div class="info-panel" id="info">
-    <div class="info-row">
-      <span class="info-ico">👋</span>
-      <div class="info-body">
-        コマンドを入力してGitの動きを確認しよう！<br>
-        まずは <strong>git init</strong> でリポジトリを初期化してみましょう。
-      </div>
-    </div>
-  </div>
+</div><!-- /app-body -->
 
-  <!-- 提案チップ -->
-  <div class="chips" id="chips">
-    <span class="chip" onclick="fill('git init')">git init</span>
-  </div>
-
-  <!-- ターミナル -->
-  <div class="terminal">
-    <span class="prompt" id="terminal-prompt">~/myproject $</span>
-    <input
-      id="cmd"
-      class="term-input"
-      type="text"
-      placeholder="コマンドを入力して Enter..."
-      autocomplete="off"
-      spellcheck="false"
-      autofocus
-    >
-    <span class="term-hint">Enter で実行</span>
-  </div>
+<!-- ── Status bar ── -->
+<div class="statusbar">
+  <div class="sb-item"><div class="sb-dot" id="sbWatchDot" style="background:#444"></div><span id="sbWatchLabel">未接続</span></div>
+  <div class="sb-item"><div class="sb-dot" id="sbGhDot" style="background:#444"></div><span id="sbGhLabel">GitHub: オフ</span></div>
+  <div class="sb-item" id="sbBranch" style="display:none">🌿 <span id="sbBranchName">main</span></div>
+  <div class="sb-item" id="sbPollRate" style="display:none;margin-left:auto">ポーリング: 800ms</div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-// Git ステート
-// ══════════════════════════════════════════════
-const DEFAULT_FILES = [
-  { name: 'README.md',  icon: '📄', type: 'file' },
-  { name: 'index.js',   icon: '📜', type: 'file' },
-  { name: 'style.css',  icon: '🎨', type: 'file' },
-];
-
+// ═══════════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════════
 const S = {
-  ready: false,
-  wd: JSON.parse(JSON.stringify(DEFAULT_FILES)),
-  sa: [],
-  lr: [],
-  rr: [],
+  wd: [], // { name, icon, type, status }
+  sa: [], // { name, icon, type, status }
+  lr: [], // { hash, msg, files }
+  rr: [], // { hash, msg, files }
 };
 
-// ══════════════════════════════════════════════
-// GitHub ステート
-// ══════════════════════════════════════════════
+// Watcher state
+const W = {
+  rootHandle: null,
+  gitHandle: null,
+  prevFiles: new Map(),       // name → { lm, size }
+  prevIndexEntries: new Map(),// name → sha1hex
+  prevCommitHash: null,
+  prevRemoteHash: null,
+  stagedFiles: new Set(),     // files currently in SA (moved from WD)
+  interval: null,
+  folderName: '',
+  branch: 'main',
+  supported: 'showDirectoryPicker' in window,
+};
+
+// GitHub state
 const GH = {
   enabled: false,
   token: null,
   user: null,
   repos: [],
-  currentRepo: null,
+  activeRepo: null,
 };
 
-// ══════════════════════════════════════════════
-// File icon mapping
-// ══════════════════════════════════════════════
-const EXT_ICONS = {
-  '.md': '📄', '.markdown': '📄', '.txt': '📝',
-  '.js': '📜', '.mjs': '📜', '.cjs': '📜',
-  '.ts': '🔷', '.tsx': '🔷',
-  '.jsx': '⚛️',
-  '.css': '🎨', '.scss': '🎨', '.sass': '🎨', '.less': '🎨',
-  '.html': '🌐', '.htm': '🌐',
-  '.json': '⚙️', '.yaml': '⚙️', '.yml': '⚙️', '.toml': '⚙️',
-  '.py': '🐍', '.pyw': '🐍',
-  '.rb': '💎',
-  '.go': '🐹',
-  '.rs': '🦀',
-  '.java': '☕',
-  '.sh': '🖥️', '.bash': '🖥️', '.zsh': '🖥️',
-  '.sql': '🗄️',
-  '.png': '🖼️', '.jpg': '🖼️', '.jpeg': '🖼️', '.gif': '🖼️', '.svg': '🖼️', '.webp': '🖼️',
-  '.pdf': '📕',
-  '.lock': '🔒',
-  '.env': '🔑',
-  '.gitignore': '🚫',
-  '.dockerfile': '🐋',
-};
-
-function getFileIcon(name, type) {
-  if (type === 'dir') return '📂';
-  const lower = name.toLowerCase();
-  if (lower === 'dockerfile') return '🐋';
-  if (lower === '.gitignore') return '🚫';
-  if (lower === 'makefile') return '🔨';
-  if (lower === 'license') return '⚖️';
-  const dot = lower.lastIndexOf('.');
-  if (dot >= 0) {
-    const ext = lower.slice(dot);
-    if (EXT_ICONS[ext]) return EXT_ICONS[ext];
-  }
-  return type === 'dir' ? '📂' : '📄';
+// ═══════════════════════════════════════════════════════════════
+//  COMPAT CHECK
+// ═══════════════════════════════════════════════════════════════
+if (!W.supported) {
+  document.getElementById('compatBanner').classList.remove('hidden');
 }
 
-function escHtml(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+// ═══════════════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════════════
+function getFileIcon(name) {
+  const ext = name.split('.').pop().toLowerCase();
+  const map = { js:'🟨', ts:'🔷', jsx:'🟦', tsx:'🔷', html:'🧡', css:'🎨', scss:'🎨',
+    json:'📋', md:'📝', py:'🐍', go:'🐹', rs:'🦀', java:'☕', rb:'💎',
+    sh:'⚡', yml:'⚙️', yaml:'⚙️', toml:'⚙️', gitignore:'🚫', env:'🔑',
+    png:'🖼', jpg:'🖼', jpeg:'🖼', gif:'🖼', svg:'🖼', pdf:'📄',
+  };
+  return map[ext] || '📄';
 }
 
-// ══════════════════════════════════════════════
-// Render
-// ══════════════════════════════════════════════
-function render(highlight = null) {
-  renderFiles('wd', S.wd, 'mod', highlight);
-  renderFiles('sa', S.sa, 'stg', highlight);
-  renderCommits('lr', S.lr, highlight);
-  renderCommits('rr', S.rr, highlight);
+function badgeLabel(status) {
+  const m = { untracked:'new', modified:'modified', deleted:'deleted', staged:'staged', 'staged-del':'staged(del)' };
+  return m[status] || status;
 }
 
-function renderFiles(id, list, badgeType, hl) {
-  const el = document.getElementById(id);
-  if (!list.length) {
-    el.innerHTML = '<div class="empty">ファイルなし</div>';
-    return;
-  }
-  el.innerHTML = list.map(f => {
-    const isHl = hl && hl.includes(f.name);
-    let badge = '';
-    if (f.type === 'dir') {
-      badge = '<span class="badge-dir">dir</span>';
-    } else if (badgeType === 'stg') {
-      badge = '<span class="badge-stg">staged</span>';
-    } else {
-      badge = '<span class="badge-mod">modified</span>';
-    }
-    return `<div class="file-card ${isHl ? 'highlight' : ''}">
-      <span class="file-ico">${f.icon}</span>
-      <span class="file-name" title="${escHtml(f.name)}">${escHtml(f.name)}</span>
-      ${badge}
-    </div>`;
-  }).join('');
-}
-
-function renderCommits(id, commits, hl) {
-  const el = document.getElementById(id);
-  if (!commits.length) {
-    el.innerHTML = '<div class="empty">コミットなし</div>';
-    return;
-  }
-  el.innerHTML = [...commits].reverse().map(c => {
-    const isHl = hl === c.hash;
-    const authorHtml = c.authorAvatar
-      ? `<div class="commit-author"><img src="${c.authorAvatar}" alt=""> ${escHtml(c.authorName || '')}</div>`
-      : '';
-    return `<div class="commit-card ${isHl ? 'highlight' : ''}">
-      <div class="commit-hash">● ${c.hash}</div>
-      <div class="commit-msg">${escHtml(c.msg)}</div>
-      <div class="commit-files">${c.files.map(escHtml).join('  ')}</div>
-      ${authorHtml}
-    </div>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════════
-// Info helpers
-// ══════════════════════════════════════════════
-function info(icon, html, next = '') {
-  document.getElementById('info').innerHTML = `
-    <div class="info-row">
-      <span class="info-ico">${icon}</span>
-      <div class="info-body">${html}</div>
-    </div>
-    ${next ? `<div class="info-row">
-      <span class="info-ico">➡️</span>
-      <div class="info-body info-next">${next}</div>
-    </div>` : ''}
+function renderFileCard(f, highlight) {
+  const card = document.createElement('div');
+  card.className = 'file-card' + (highlight ? ' highlight' : '') + (f.status === 'deleted' ? ' is-deleted' : '');
+  const del = f.status === 'deleted';
+  card.innerHTML = `
+    <span class="fc-ico">${f.icon || getFileIcon(f.name)}</span>
+    <span class="fc-name${del ? ' del' : ''}">${esc(f.name)}</span>
+    <span class="fc-badge ${f.status}">${badgeLabel(f.status)}</span>
   `;
+  return card;
 }
 
-function err(html) {
-  const el = document.getElementById('info');
-  el.innerHTML = `
-    <div class="info-row">
-      <span class="info-ico">❌</span>
-      <div class="info-body info-err">${html}</div>
-    </div>
+function renderCommitCard(c, highlight) {
+  const card = document.createElement('div');
+  card.className = 'commit-card' + (highlight ? ' highlight' : '');
+  const files = c.files && c.files.length ? `${c.files.length}ファイル` : '';
+  card.innerHTML = `
+    <div class="commit-hash">${esc(c.hash)}</div>
+    <div class="commit-msg">${esc(c.msg)}</div>
+    ${files ? `<div class="commit-files">${files}</div>` : ''}
   `;
-  el.classList.remove('shake');
-  void el.offsetWidth;
-  el.classList.add('shake');
+  return card;
 }
 
-function chips(...cmds) {
-  document.getElementById('chips').innerHTML =
-    cmds.map(c => `<span class="chip" onclick="fill('${escHtml(c)}')">${escHtml(c)}</span>`).join('');
-}
+function render(highlight) {
+  // WD
+  const wdBody = document.getElementById('wd-body');
+  document.getElementById('wd-empty').style.display = S.wd.length ? 'none' : '';
+  Array.from(wdBody.querySelectorAll('.file-card')).forEach(el => el.remove());
+  S.wd.forEach(f => {
+    const isNew = highlight && highlight.wd && highlight.wd.includes(f.name);
+    wdBody.appendChild(renderFileCard(f, isNew));
+  });
 
-function fill(cmd) {
-  const el = document.getElementById('cmd');
-  el.value = cmd;
-  el.focus();
-}
+  // SA
+  const saBody = document.getElementById('sa-body');
+  document.getElementById('sa-empty').style.display = S.sa.length ? 'none' : '';
+  Array.from(saBody.querySelectorAll('.file-card')).forEach(el => el.remove());
+  S.sa.forEach(f => {
+    const isNew = highlight && highlight.sa && highlight.sa.includes(f.name);
+    saBody.appendChild(renderFileCard(f, isNew));
+  });
 
-// ══════════════════════════════════════════════
-// Toggle & Modal
-// ══════════════════════════════════════════════
-function onToggleChange(checked) {
-  GH.enabled = checked;
-  if (checked) {
-    if (!GH.token) {
-      openModal();
-    } else {
-      showUserPanel();
-    }
-  } else {
-    hideUserPanel();
-    document.getElementById('gh-login-btn').classList.add('hidden');
-  }
-}
+  // LR
+  const lrBody = document.getElementById('lr-body');
+  document.getElementById('lr-empty').style.display = S.lr.length ? 'none' : '';
+  Array.from(lrBody.querySelectorAll('.commit-card')).forEach(el => el.remove());
+  [...S.lr].reverse().forEach((c, i) => {
+    const isNew = highlight && highlight.lr && i === 0;
+    lrBody.appendChild(renderCommitCard(c, isNew));
+  });
 
-function openModal() {
-  document.getElementById('modal-overlay').classList.remove('hidden');
-  document.getElementById('token-input').value = '';
-  document.getElementById('modal-error').style.display = 'none';
-  setTimeout(() => document.getElementById('token-input').focus(), 100);
-}
-
-function closeModal() {
-  document.getElementById('modal-overlay').classList.add('hidden');
-  // トグルを OFF に戻す（ログインしていない場合）
-  if (!GH.token) {
-    document.getElementById('gh-toggle').checked = false;
-    GH.enabled = false;
-  }
-}
-
-function onOverlayClick(e) {
-  if (e.target === document.getElementById('modal-overlay')) {
-    closeModal();
-  }
-}
-
-function openGhSettings() {
-  window.open('https://github.com/settings/tokens/new', '_blank');
-}
-
-// ══════════════════════════════════════════════
-// GitHub Auth
-// ══════════════════════════════════════════════
-async function doLogin() {
-  const token = document.getElementById('token-input').value.trim();
-  if (!token) {
-    showModalError('トークンを入力してください。');
-    return;
-  }
-
-  setLoginBtnLoading(true);
-  hideModalError();
-
-  try {
-    // ユーザー情報を取得
-    const userRes = await fetch('https://api.github.com/user', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-      }
-    });
-
-    if (!userRes.ok) {
-      if (userRes.status === 401) {
-        showModalError('トークンが無効です。正しいPersonal Access Tokenを入力してください。');
-      } else {
-        showModalError(`GitHub APIエラー: ${userRes.status}`);
-      }
-      setLoginBtnLoading(false);
-      return;
-    }
-
-    GH.token = token;
-    GH.user = await userRes.json();
-
-    // リポジトリ一覧を取得
-    await fetchRepos();
-
-    document.getElementById('modal-overlay').classList.add('hidden');
-    showUserPanel();
-
-    info('🔗',
-      `<strong>${escHtml(GH.user.login)}</strong> としてGitHubに接続しました！<br>` +
-      `リポジトリを選択すると、実際のファイルが作業ディレクトリに読み込まれます。`,
-      'ヘッダーのドロップダウンからリポジトリを選択してください。'
-    );
-
-  } catch (e) {
-    showModalError('ネットワークエラーが発生しました。インターネット接続を確認してください。');
-  }
-
-  setLoginBtnLoading(false);
-}
-
-async function fetchRepos() {
-  const res = await fetch(
-    'https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator',
-    { headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' } }
-  );
-  if (!res.ok) return;
-
-  GH.repos = await res.json();
-
-  const sel = document.getElementById('repo-select');
-  sel.innerHTML = '<option value="">リポジトリを選択...</option>';
-  GH.repos.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.full_name;
-    opt.textContent = `${r.private ? '🔒 ' : ''}${r.name}`;
-    sel.appendChild(opt);
+  // RR
+  const rrBody = document.getElementById('rr-body');
+  document.getElementById('rr-empty').style.display = S.rr.length ? 'none' : '';
+  Array.from(rrBody.querySelectorAll('.commit-card')).forEach(el => el.remove());
+  [...S.rr].reverse().forEach((c, i) => {
+    const isNew = highlight && highlight.rr && i === 0;
+    rrBody.appendChild(renderCommitCard(c, isNew));
   });
 }
 
-function showUserPanel() {
-  document.getElementById('gh-login-btn').classList.add('hidden');
-  document.getElementById('gh-loading').classList.add('hidden');
-
-  document.getElementById('gh-avatar').src = GH.user.avatar_url;
-  document.getElementById('gh-username').textContent = `@${GH.user.login}`;
-  document.getElementById('gh-user-panel').classList.remove('hidden');
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function hideUserPanel() {
-  document.getElementById('gh-user-panel').classList.add('hidden');
-  document.getElementById('gh-loading').classList.add('hidden');
-}
-
-async function doLogout() {
-  GH.token = null;
-  GH.user = null;
-  GH.repos = [];
-  GH.currentRepo = null;
-  GH.enabled = false;
-
-  document.getElementById('gh-toggle').checked = false;
-  hideUserPanel();
-  document.getElementById('gh-login-btn').classList.add('hidden');
-
-  // リモートゾーンのGitHub表示をリセット
-  setRemoteGhMode(false, '');
-
-  // デフォルトファイルに戻す
-  S.wd = JSON.parse(JSON.stringify(DEFAULT_FILES));
-  S.sa = [];
-  S.lr = [];
-  S.rr = [];
-  S.ready = false;
-
-  document.getElementById('terminal-prompt').textContent = '~/myproject $';
-  render();
-  info('👋', 'GitHubからログアウトしました。デモモードに戻りました。', '');
-  chips('git init');
-}
-
-// ══════════════════════════════════════════════
-// Repository Selection
-// ══════════════════════════════════════════════
-async function onRepoSelect(fullName) {
-  if (!fullName) return;
-
-  GH.currentRepo = fullName;
-  const repoName = fullName.split('/')[1];
-
-  // ローディング表示
-  document.getElementById('wd').innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto 8px"></div>読み込み中...</div>';
-  document.getElementById('rr').innerHTML = '<div class="empty"><div class="spinner" style="margin:0 auto 8px"></div>読み込み中...</div>';
-
+// ═══════════════════════════════════════════════════════════════
+//  FILE SYSTEM ACCESS API
+// ═══════════════════════════════════════════════════════════════
+async function openFolder() {
+  if (!W.supported) {
+    termPrint('error', 'このブラウザはFile System Access APIに対応していません。');
+    termPrint('info', 'デモモードで操作してください。');
+    return;
+  }
   try {
-    // ルートのファイル一覧を取得
-    const contentsRes = await fetch(
-      `https://api.github.com/repos/${fullName}/contents/`,
-      { headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' } }
-    );
-
-    if (!contentsRes.ok) {
-      err(`リポジトリの読み込みに失敗しました (${contentsRes.status})。`);
-      render();
-      return;
-    }
-
-    const contents = await contentsRes.json();
-
-    // ファイルとディレクトリをセット（最大15件）
-    S.wd = contents.slice(0, 15).map(item => ({
-      name: item.name,
-      icon: getFileIcon(item.name, item.type),
-      type: item.type,
-    }));
-
-    S.sa = [];
-    S.lr = [];
-
-    // 実際のコミット履歴をリモートゾーンに表示
-    await fetchRecentCommits(fullName);
-
-    S.ready = true;
-    setRemoteGhMode(true, fullName);
-
-    document.getElementById('terminal-prompt').textContent = `~/${repoName} $`;
-
-    render();
-    info('📂',
-      `<strong>${escHtml(fullName)}</strong> のファイルを読み込みました。<br>` +
-      `${S.wd.length} 件のファイル/ディレクトリが作業ディレクトリに表示されています。`,
-      '<strong>git add</strong> でステージングしてみましょう！'
-    );
-
-    const addCmds = S.wd.filter(f => f.type === 'file').slice(0, 2).map(f => `git add ${f.name}`);
-    chips('git add .', ...addCmds, 'git status');
-
+    const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
+    await connectFolder(dirHandle);
   } catch (e) {
-    err('ネットワークエラーが発生しました。');
-    render();
+    if (e.name !== 'AbortError') {
+      termPrint('error', 'フォルダのオープンに失敗しました: ' + e.message);
+    }
   }
 }
 
-async function fetchRecentCommits(fullName) {
-  try {
-    const res = await fetch(
-      `https://api.github.com/repos/${fullName}/commits?per_page=5`,
-      { headers: { 'Authorization': `Bearer ${GH.token}`, 'Accept': 'application/vnd.github.v3+json' } }
-    );
-    if (!res.ok) return;
+async function connectFolder(dirHandle) {
+  // Stop existing watcher
+  if (W.interval) { clearInterval(W.interval); W.interval = null; }
 
+  W.rootHandle = dirHandle;
+  W.folderName = dirHandle.name;
+
+  // Try to get .git handle
+  try {
+    W.gitHandle = await dirHandle.getDirectoryHandle('.git');
+  } catch {
+    W.gitHandle = null;
+    termPrint('output', '.git ディレクトリが見つかりません。Gitリポジトリ以外のフォルダです。');
+  }
+
+  // Baseline file scan (establish baseline WITHOUT marking as changed)
+  W.prevFiles.clear();
+  W.stagedFiles.clear();
+  W.prevIndexEntries.clear();
+  S.wd = []; S.sa = [];
+
+  for await (const [name, handle] of dirHandle.entries()) {
+    if (shouldSkip(name)) continue;
+    if (handle.kind === 'file') {
+      try {
+        const f = await handle.getFile();
+        W.prevFiles.set(name, { lm: f.lastModified, size: f.size });
+        // Show tracked files (those in git) as clean
+        S.wd.push({ name, icon: getFileIcon(name), type: 'file', status: 'clean' });
+      } catch {}
+    }
+  }
+
+  // Read git state
+  if (W.gitHandle) {
+    // Detect branch
+    try { W.branch = await readBranch(); } catch {}
+
+    // Baseline index (so next poll only diffs against this)
+    try { W.prevIndexEntries = await parseCurrentIndex(); } catch {}
+
+    // Current commit hash baseline
+    try { W.prevCommitHash = await getCurrentCommitHash(); } catch {}
+    try { W.prevRemoteHash = await getRemoteHash(); } catch {}
+
+    // Load commit history into LR zone
+    try { S.lr = await readGitLog(); } catch {}
+    try { S.rr = await readRemoteCommits(); } catch {}
+
+    // Remove clean files that are actually tracked (not dirty)
+    // Keep WD only if untracked or modified vs HEAD
+    // For now show all as tracked/clean except truly untracked
+    const indexNames = new Set(W.prevIndexEntries.keys());
+    // Files not in index are untracked
+    S.wd = S.wd.map(f => ({
+      ...f,
+      status: indexNames.has(f.name) ? 'clean' : 'untracked'
+    })).filter(f => f.status !== 'clean'); // only show dirty/untracked
+  }
+
+  // UI updates
+  document.getElementById('btnOpenFolder').classList.add('connected');
+  document.getElementById('btnOpenFolder').innerHTML = `<span>✅</span> ${esc(W.folderName)}`;
+  const fnEl = document.getElementById('folderName');
+  fnEl.textContent = W.folderName;
+  fnEl.classList.remove('hidden');
+
+  document.getElementById('watchIndicator').style.display = 'flex';
+  document.getElementById('termMode').textContent = 'ライブ監視';
+  document.getElementById('termMode').classList.add('live');
+  document.getElementById('termPs1').textContent = `${W.folderName} $ `;
+  document.getElementById('sbWatchDot').style.background = 'var(--success)';
+  document.getElementById('sbWatchLabel').textContent = `監視中: ${W.folderName}`;
+  document.getElementById('sbBranch').style.display = '';
+  document.getElementById('sbBranchName').textContent = W.branch;
+  document.getElementById('sbPollRate').style.display = '';
+
+  termPrint('info', `📁 フォルダ接続: ${W.folderName}`);
+  if (W.gitHandle) {
+    termPrint('info', `🌿 ブランチ: ${W.branch} / コミット: ${S.lr.length}件`);
+    termPrint('output', 'VS Code / Cursor でファイルを編集すると自動で反映されます。');
+  }
+
+  render();
+
+  // Start polling
+  W.interval = setInterval(pollAll, 800);
+}
+
+function shouldSkip(name) {
+  return name.startsWith('.') || name === 'node_modules' || name === '__pycache__' || name === 'dist' || name === 'build' || name === '.git';
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  POLLING
+// ═══════════════════════════════════════════════════════════════
+async function pollAll() {
+  try { await pollFiles(); } catch {}
+  if (W.gitHandle) {
+    try { await pollGit(); } catch {}
+  }
+}
+
+async function pollFiles() {
+  const cur = new Map();
+  for await (const [name, handle] of W.rootHandle.entries()) {
+    if (shouldSkip(name)) continue;
+    if (handle.kind === 'file') {
+      try {
+        const f = await handle.getFile();
+        cur.set(name, { lm: f.lastModified, size: f.size });
+      } catch {}
+    }
+  }
+
+  const prev = W.prevFiles;
+  let changed = false;
+  const hlWd = [];
+
+  // New or modified files
+  for (const [name, info] of cur) {
+    if (W.stagedFiles.has(name)) continue; // in SA already
+    const p = prev.get(name);
+    const inWD = S.wd.findIndex(f => f.name === name);
+    const inSA = S.sa.findIndex(f => f.name === name);
+    const inIndex = W.prevIndexEntries.has(name);
+
+    if (!p) {
+      // New file appeared
+      if (inWD < 0 && inSA < 0) {
+        S.wd.push({ name, icon: getFileIcon(name), type: 'file', status: 'untracked' });
+        hlWd.push(name);
+        changed = true;
+      }
+    } else if (info.lm !== p.lm || info.size !== p.size) {
+      // Modified
+      if (inWD >= 0) {
+        if (S.wd[inWD].status !== 'modified') {
+          S.wd[inWD].status = 'modified';
+          hlWd.push(name);
+          changed = true;
+        }
+      } else if (inSA < 0) {
+        const status = inIndex ? 'modified' : 'untracked';
+        S.wd.push({ name, icon: getFileIcon(name), type: 'file', status });
+        hlWd.push(name);
+        changed = true;
+      }
+    }
+  }
+
+  // Deleted files
+  for (const [name] of prev) {
+    if (!cur.has(name)) {
+      const wi = S.wd.findIndex(f => f.name === name);
+      if (wi >= 0 && S.wd[wi].status !== 'deleted') {
+        S.wd[wi].status = 'deleted';
+        hlWd.push(name);
+        changed = true;
+      }
+    }
+  }
+
+  W.prevFiles = cur;
+  if (changed) render({ wd: hlWd });
+}
+
+async function pollGit() {
+  // ── Staging: parse .git/index ──
+  try {
+    const idxHandle = await W.gitHandle.getFileHandle('index');
+    const idxFile = await idxHandle.getFile();
+    const buf = await idxFile.arrayBuffer();
+    const newEntries = parseGitIndex(buf);
+    handleIndexChange(newEntries);
+  } catch {}
+
+  // ── Commits: watch HEAD ──
+  try {
+    const hash = await getCurrentCommitHash();
+    if (hash && hash !== W.prevCommitHash) {
+      const msg = await readLatestCommitMsg();
+      const files = S.sa.map(f => f.name);
+      S.lr.push({ hash: hash.slice(0, 7), msg: msg || 'commit', files });
+      S.sa = [];
+      W.stagedFiles.clear();
+      W.prevIndexEntries = await parseCurrentIndex();
+      W.prevCommitHash = hash;
+      termPrint('info', `✅ コミット: ${hash.slice(0,7)} "${msg || 'commit'}"`);
+      render({ lr: true });
+    }
+  } catch {}
+
+  // ── Push: watch remote ref ──
+  try {
+    const rHash = await getRemoteHash();
+    if (rHash && rHash !== W.prevRemoteHash) {
+      W.prevRemoteHash = rHash;
+      const prev = S.rr.length;
+      S.rr = await readRemoteCommits();
+      if (S.rr.length > prev) {
+        termPrint('info', `🚀 プッシュ検出: リモートに${S.rr.length - prev}件追加`);
+        render({ rr: true });
+      } else {
+        render();
+      }
+    }
+  } catch {}
+
+  // ── Branch change ──
+  try {
+    const b = await readBranch();
+    if (b !== W.branch) {
+      W.branch = b;
+      document.getElementById('sbBranchName').textContent = b;
+      termPrint('info', `🌿 ブランチ変更: ${b}`);
+    }
+  } catch {}
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  INDEX CHANGE HANDLER
+// ═══════════════════════════════════════════════════════════════
+function handleIndexChange(newEntries) {
+  let changed = false;
+  const hlSa = [];
+
+  // Newly staged
+  for (const [name, sha] of newEntries) {
+    const prevSha = W.prevIndexEntries.get(name);
+    if (prevSha === undefined || sha !== prevSha) {
+      const wi = S.wd.findIndex(f => f.name === name);
+      const icon = wi >= 0 ? S.wd[wi].icon : getFileIcon(name);
+      const wdSt = wi >= 0 ? S.wd[wi].status : 'modified';
+      if (wi >= 0) S.wd.splice(wi, 1);
+      if (!S.sa.find(f => f.name === name)) {
+        const saStatus = wdSt === 'deleted' ? 'staged-del' : 'staged';
+        S.sa.push({ name, icon, type: 'file', status: saStatus });
+        W.stagedFiles.add(name);
+        hlSa.push(name);
+        changed = true;
+        if (prevSha === undefined) {
+          termPrint('output', `+ git add ${name} (new file)`);
+        } else {
+          termPrint('output', `+ git add ${name}`);
+        }
+      }
+    }
+  }
+
+  // Un-staged
+  for (const [name] of W.prevIndexEntries) {
+    if (!newEntries.has(name)) {
+      const si = S.sa.findIndex(f => f.name === name);
+      if (si >= 0) {
+        const f = S.sa.splice(si, 1)[0];
+        W.stagedFiles.delete(name);
+        if (W.prevFiles.has(name)) {
+          S.wd.push({ name, icon: f.icon, type: 'file', status: 'modified' });
+        }
+        changed = true;
+        termPrint('output', `- git restore --staged ${name}`);
+      }
+    }
+  }
+
+  W.prevIndexEntries = newEntries;
+  if (changed) render({ sa: hlSa });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GIT INDEX PARSER
+// ═══════════════════════════════════════════════════════════════
+function parseGitIndex(buffer) {
+  const view = new DataView(buffer);
+  const bytes = new Uint8Array(buffer);
+  const dec = new TextDecoder();
+  const magic = dec.decode(bytes.slice(0, 4));
+  if (magic !== 'DIRC') return new Map();
+
+  const version = view.getUint32(4, false);
+  const count = view.getUint32(8, false);
+  const entries = new Map();
+  let off = 12;
+
+  for (let i = 0; i < count && off + 62 < buffer.byteLength; i++) {
+    const entryStart = off;
+    off += 40; // ctime(8) + mtime(8) + dev(4) + ino(4) + mode(4) + uid(4) + gid(4) + size(4) = 40
+    const sha = Array.from(bytes.slice(off, off + 20))
+      .map(b => b.toString(16).padStart(2, '0')).join('');
+    off += 20;
+    const flags = view.getUint16(off, false);
+    off += 2;
+    const nameLen = flags & 0x0fff;
+    if (version >= 3 && (flags & 0x4000)) off += 2; // extended flags
+
+    let name;
+    if (nameLen < 0xfff) {
+      name = dec.decode(bytes.slice(off, off + nameLen));
+      off += nameLen + 1; // NUL terminator
+    } else {
+      let end = off;
+      while (end < bytes.length && bytes[end] !== 0) end++;
+      name = dec.decode(bytes.slice(off, end));
+      off = end + 1;
+    }
+
+    // Pad to 8-byte boundary
+    const entryLen = off - entryStart;
+    const padded = Math.ceil(entryLen / 8) * 8;
+    off = entryStart + padded;
+
+    if (name) entries.set(name, sha);
+  }
+  return entries;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GIT READING HELPERS
+// ═══════════════════════════════════════════════════════════════
+async function readTextFile(handle, ...path) {
+  let cur = handle;
+  for (let i = 0; i < path.length - 1; i++) {
+    cur = await cur.getDirectoryHandle(path[i]);
+  }
+  const fh = await cur.getFileHandle(path[path.length - 1]);
+  const f = await fh.getFile();
+  return (await f.text()).trim();
+}
+
+async function readBranch() {
+  const head = await readTextFile(W.gitHandle, 'HEAD');
+  if (head.startsWith('ref: refs/heads/')) {
+    return head.replace('ref: refs/heads/', '').trim();
+  }
+  return head.slice(0, 7); // detached HEAD
+}
+
+async function getCurrentCommitHash() {
+  const head = await readTextFile(W.gitHandle, 'HEAD');
+  if (head.startsWith('ref: ')) {
+    const ref = head.replace('ref: ', '').trim();
+    const parts = ref.split('/');
+    try {
+      if (parts.length === 3) {
+        return await readTextFile(W.gitHandle, 'refs', parts[1], parts[2]);
+      }
+      return await readTextFile(W.gitHandle, ...parts);
+    } catch {
+      // packed-refs fallback
+      try {
+        const packed = await readTextFile(W.gitHandle, 'packed-refs');
+        for (const line of packed.split('\n')) {
+          if (line.endsWith(ref)) return line.split(' ')[0];
+        }
+      } catch {}
+      return null;
+    }
+  }
+  return head.length === 40 ? head : null;
+}
+
+async function readLatestCommitMsg() {
+  try {
+    return await readTextFile(W.gitHandle, 'COMMIT_EDITMSG');
+  } catch {
+    return 'commit';
+  }
+}
+
+async function parseCurrentIndex() {
+  try {
+    const fh = await W.gitHandle.getFileHandle('index');
+    const f = await fh.getFile();
+    return parseGitIndex(await f.arrayBuffer());
+  } catch {
+    return new Map();
+  }
+}
+
+async function readGitLog() {
+  const commits = [];
+  try {
+    const logsDir = await W.gitHandle.getDirectoryHandle('logs');
+    const text = await readTextFile(logsDir, 'HEAD');
+    for (const line of text.split('\n').reverse()) {
+      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+ (.+)$/);
+      if (m && m[2] && !m[2].startsWith('checkout:') && !m[2].startsWith('branch:') && !m[2].startsWith('clone:') && !m[2].startsWith('reset:') && !m[2].startsWith('pull:')) {
+        const msg = m[2].replace(/^commit: /, '');
+        if (msg && msg.length > 0) {
+          commits.push({ hash: m[1].slice(0, 7), msg, files: [] });
+        }
+      }
+    }
+  } catch {}
+  return commits;
+}
+
+async function getRemoteHash() {
+  try {
+    const refsDir = await W.gitHandle.getDirectoryHandle('refs');
+    const remotesDir = await refsDir.getDirectoryHandle('remotes');
+    const originDir = await remotesDir.getDirectoryHandle('origin');
+    // Try main then master
+    for (const branch of ['main', 'master', W.branch]) {
+      try { return await readTextFile(originDir, branch); } catch {}
+    }
+  } catch {}
+  return null;
+}
+
+async function readRemoteCommits() {
+  const commits = [];
+  try {
+    const logsDir = await W.gitHandle.getDirectoryHandle('logs');
+    const refsDir = await logsDir.getDirectoryHandle('refs');
+    const remotesDir = await refsDir.getDirectoryHandle('remotes');
+    const originDir = await remotesDir.getDirectoryHandle('origin');
+    let text = '';
+    for (const branch of ['main', 'master', W.branch]) {
+      try { text = await readTextFile(originDir, branch); break; } catch {}
+    }
+    if (!text) return commits;
+    for (const line of text.split('\n').reverse()) {
+      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+ (.+)$/);
+      if (m) {
+        const msg = m[2].replace(/^commit: /, '');
+        if (msg) commits.push({ hash: m[1].slice(0, 7), msg, files: [] });
+      }
+    }
+  } catch {}
+  return commits;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TERMINAL
+// ═══════════════════════════════════════════════════════════════
+const TERM_HISTORY = [];
+let histIdx = -1;
+
+function termPrint(type, text) {
+  const body = document.getElementById('termBody');
+  const line = document.createElement('div');
+  line.className = `term-line ${type}`;
+  line.textContent = text;
+  body.appendChild(line);
+  // Keep last 120 lines
+  while (body.children.length > 120) body.removeChild(body.firstChild);
+  body.scrollTop = body.scrollHeight;
+}
+
+function onTermKey(e) {
+  const inp = document.getElementById('termInput');
+  if (e.key === 'ArrowUp') {
+    if (histIdx < TERM_HISTORY.length - 1) histIdx++;
+    inp.value = TERM_HISTORY[TERM_HISTORY.length - 1 - histIdx] || '';
+    e.preventDefault(); return;
+  }
+  if (e.key === 'ArrowDown') {
+    if (histIdx > 0) histIdx--;
+    inp.value = TERM_HISTORY[TERM_HISTORY.length - 1 - histIdx] || '';
+    e.preventDefault(); return;
+  }
+  if (e.key !== 'Enter') return;
+  const cmd = inp.value.trim();
+  if (!cmd) return;
+  TERM_HISTORY.push(cmd); histIdx = -1;
+  inp.value = '';
+  termPrint('prompt', `$ ${cmd}`);
+  handleTermCmd(cmd);
+}
+
+function handleTermCmd(raw) {
+  // If folder is connected, inform user to use real terminal
+  if (W.rootHandle) {
+    termPrint('output', 'ℹ フォルダ接続中 — 実際の端末でコマンドを実行してください。');
+    termPrint('output', 'GitGUIはVS Code/Cursorの変更を自動で検出します。');
+    return;
+  }
+
+  // Demo mode
+  const parts = raw.trim().split(/\s+/);
+  const cmd = parts[0];
+  const sub = parts[1];
+  const args = parts.slice(2);
+
+  if (cmd === 'clear') { document.getElementById('termBody').innerHTML = ''; return; }
+  if (cmd !== 'git') { termPrint('error', `command not found: ${cmd}`); return; }
+
+  switch (sub) {
+    case 'init':
+      termPrint('output', 'Initialized empty Git repository in ./demo/.git/');
+      termPrint('info', '💡 デモモード: フォルダを開くとリアルなGitリポジトリを監視できます');
+      break;
+    case 'add': {
+      const target = parts[2];
+      if (!target) { termPrint('error', 'Nothing specified, nothing added.'); break; }
+      const files = target === '.' || target === '-A'
+        ? [...S.wd]
+        : S.wd.filter(f => f.name === target);
+      if (!files.length) { termPrint('output', `Nothing to add.`); break; }
+      files.forEach(f => {
+        const wi = S.wd.findIndex(x => x.name === f.name);
+        const icon = wi >= 0 ? S.wd[wi].icon : getFileIcon(f.name);
+        const wdSt = wi >= 0 ? S.wd[wi].status : 'modified';
+        if (wi >= 0) S.wd.splice(wi, 1);
+        if (!S.sa.find(x => x.name === f.name)) {
+          S.sa.push({ name: f.name, icon, type: 'file', status: wdSt === 'deleted' ? 'staged-del' : 'staged' });
+        }
+        termPrint('output', `  added: ${f.name}`);
+      });
+      render({ sa: files.map(f => f.name) });
+      break;
+    }
+    case 'commit': {
+      const mIdx = parts.indexOf('-m');
+      const msg = mIdx >= 0 ? parts.slice(mIdx + 1).join(' ').replace(/^["']|["']$/g, '') : 'commit';
+      if (!S.sa.length) { termPrint('error', 'nothing to commit, working tree clean'); break; }
+      const hash = Math.random().toString(16).slice(2, 9);
+      S.lr.push({ hash, msg, files: S.sa.map(f => f.name) });
+      S.sa = [];
+      W.stagedFiles.clear();
+      termPrint('output', `[${W.branch || 'main'} ${hash}] ${msg}`);
+      render({ lr: true });
+      break;
+    }
+    case 'push': {
+      if (!S.lr.length) { termPrint('error', 'Everything up-to-date'); break; }
+      const unpushed = S.lr.filter(c => !S.rr.find(r => r.hash === c.hash));
+      if (!unpushed.length) { termPrint('output', 'Everything up-to-date'); break; }
+      unpushed.forEach(c => S.rr.push({ ...c }));
+      termPrint('output', `To github.com/user/repo.git`);
+      termPrint('output', `   pushed ${unpushed.length} commit(s) → origin/${W.branch || 'main'}`);
+      render({ rr: true });
+      break;
+    }
+    case 'status': {
+      termPrint('output', `On branch ${W.branch || 'main'}`);
+      if (!S.wd.length && !S.sa.length) { termPrint('output', 'nothing to commit, working tree clean'); break; }
+      if (S.sa.length) { termPrint('output', 'Changes to be committed:'); S.sa.forEach(f => termPrint('output', `  ${f.name}`)); }
+      if (S.wd.length) { termPrint('output', 'Changes not staged for commit:'); S.wd.forEach(f => termPrint('output', `  ${f.status}: ${f.name}`)); }
+      break;
+    }
+    case 'log': {
+      if (!S.lr.length) { termPrint('output', 'No commits yet.'); break; }
+      [...S.lr].reverse().forEach(c => termPrint('output', `${c.hash}  ${c.msg}`));
+      break;
+    }
+    case 'touch': case 'new': {
+      const fname = parts[2] || `file${S.wd.length + 1}.txt`;
+      if (!S.wd.find(f => f.name === fname) && !S.sa.find(f => f.name === fname)) {
+        S.wd.push({ name: fname, icon: getFileIcon(fname), type: 'file', status: 'untracked' });
+        render({ wd: [fname] });
+        termPrint('output', `Created: ${fname}`);
+      } else {
+        termPrint('output', `Already exists: ${fname}`);
+      }
+      break;
+    }
+    case 'restore': {
+      if (parts[2] === '--staged') {
+        const fname = parts[3];
+        const si = S.sa.findIndex(f => f.name === fname);
+        if (si >= 0) {
+          const f = S.sa.splice(si, 1)[0];
+          S.wd.push({ name: f.name, icon: f.icon, type: 'file', status: 'modified' });
+          render();
+        }
+      } else {
+        const fname = parts[2];
+        const wi = S.wd.findIndex(f => f.name === fname);
+        if (wi >= 0) { S.wd.splice(wi, 1); render(); termPrint('output', `Restored: ${fname}`); }
+      }
+      break;
+    }
+    case 'reset': {
+      if (parts[2] === 'HEAD' || parts[2] === '--mixed') {
+        S.sa.forEach(f => S.wd.push({ ...f, status: 'modified' }));
+        S.sa = [];
+        render();
+        termPrint('output', 'Unstaged all changes');
+      }
+      break;
+    }
+    case 'checkout': case 'switch': {
+      const branch = parts[2] === '-b' ? parts[3] : parts[2];
+      if (branch) {
+        W.branch = branch;
+        document.getElementById('sbBranchName').textContent = branch;
+        termPrint('output', `Switched to branch '${branch}'`);
+      }
+      break;
+    }
+    case 'help': case '--help':
+      termPrint('info', 'デモで使えるコマンド: git add, commit -m, push, status, log, restore, reset HEAD, checkout, touch');
+      break;
+    default:
+      termPrint('output', `git: '${sub}' is not a git command (demo mode)`);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  GITHUB
+// ═══════════════════════════════════════════════════════════════
+function onGhToggle(on) {
+  GH.enabled = on;
+  const authArea = document.getElementById('ghAuthArea');
+  if (on) {
+    authArea.classList.remove('hidden');
+    if (!GH.token) {
+      document.getElementById('btnGhLogin').classList.remove('hidden');
+    } else {
+      showGhUser();
+    }
+    document.getElementById('sbGhDot').style.background = 'var(--accent)';
+    document.getElementById('sbGhLabel').textContent = 'GitHub: オン';
+  } else {
+    authArea.classList.add('hidden');
+    document.getElementById('sbGhDot').style.background = '#444';
+    document.getElementById('sbGhLabel').textContent = 'GitHub: オフ';
+  }
+}
+
+function openGhModal() {
+  document.getElementById('ghModal').classList.remove('hidden');
+  document.getElementById('patInput').value = '';
+  document.getElementById('modalError').style.display = 'none';
+}
+
+document.getElementById('btnModalCancel').addEventListener('click', () => {
+  document.getElementById('ghModal').classList.add('hidden');
+});
+
+document.getElementById('btnModalConnect').addEventListener('click', async () => {
+  const token = document.getElementById('patInput').value.trim();
+  if (!token) { showModalError('トークンを入力してください'); return; }
+  const label = document.getElementById('modalBtnLabel');
+  label.textContent = '認証中...';
+  document.getElementById('btnModalConnect').disabled = true;
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (!res.ok) throw new Error('認証失敗 (HTTP ' + res.status + ')');
+    const user = await res.json();
+    GH.token = token;
+    GH.user = user;
+    document.getElementById('ghModal').classList.add('hidden');
+    showGhUser();
+    await loadRepos();
+    document.getElementById('sbGhDot').style.background = 'var(--success)';
+    document.getElementById('sbGhLabel').textContent = `GitHub: ${user.login}`;
+    termPrint('info', `✅ GitHub接続: @${user.login}`);
+    document.getElementById('zone-rr').classList.add('gh-connected');
+    document.getElementById('remoteBadge').style.display = '';
+  } catch (e) {
+    showModalError(e.message);
+  } finally {
+    label.textContent = '連携する';
+    document.getElementById('btnModalConnect').disabled = false;
+  }
+});
+
+function showModalError(msg) {
+  const el = document.getElementById('modalError');
+  el.textContent = msg; el.style.display = '';
+}
+
+function showGhUser() {
+  document.getElementById('btnGhLogin').classList.add('hidden');
+  document.getElementById('ghLoading').classList.add('hidden');
+  const panel = document.getElementById('ghUserPanel');
+  panel.classList.remove('hidden');
+  document.getElementById('ghAvatar').src = GH.user.avatar_url;
+  document.getElementById('ghUsername').textContent = '@' + GH.user.login;
+}
+
+async function loadRepos() {
+  try {
+    const res = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
+      headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    const repos = await res.json();
+    GH.repos = repos;
+    const sel = document.getElementById('repoSelect');
+    sel.innerHTML = '<option value="">リポジトリを選択...</option>';
+    repos.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r.full_name;
+      opt.textContent = r.full_name;
+      sel.appendChild(opt);
+    });
+  } catch {}
+}
+
+async function onRepoSelect(fullName) {
+  if (!fullName) return;
+  GH.activeRepo = fullName;
+  termPrint('info', `📦 リポジトリ選択: ${fullName}`);
+  // Load remote commits into RR
+  try {
+    const res = await fetch(`https://api.github.com/repos/${fullName}/commits?per_page=10`, {
+      headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' }
+    });
     const commits = await res.json();
     S.rr = commits.map(c => ({
       hash: c.sha.slice(0, 7),
-      msg: c.commit.message.split('\n')[0].slice(0, 50),
-      files: [],
-      authorName: c.commit.author.name,
-      authorAvatar: c.author ? c.author.avatar_url : null,
+      msg: c.commit.message.split('\n')[0],
+      files: []
     }));
+    render({ rr: true });
+    document.getElementById('remoteBadge').style.display = '';
+    termPrint('output', `  ${S.rr.length}件のコミットを取得`);
   } catch (e) {
-    // コミット取得失敗は無視
+    termPrint('error', '取得失敗: ' + e.message);
   }
 }
 
-function setRemoteGhMode(on, fullName) {
-  const zone = document.getElementById('zone-remote');
-  const badge = document.getElementById('gh-connected-badge');
-  const sub = document.getElementById('remote-sub');
-
-  if (on) {
-    zone.classList.add('gh-connected');
-    badge.classList.remove('hidden');
-    sub.textContent = `origin: ${fullName}`;
-  } else {
-    zone.classList.remove('gh-connected');
-    badge.classList.add('hidden');
-    sub.textContent = 'Remote Repository (origin)';
-  }
+function ghLogout() {
+  GH.token = null; GH.user = null; GH.repos = []; GH.activeRepo = null;
+  document.getElementById('ghUserPanel').classList.add('hidden');
+  document.getElementById('btnGhLogin').classList.remove('hidden');
+  document.getElementById('zone-rr').classList.remove('gh-connected');
+  document.getElementById('remoteBadge').style.display = 'none';
+  document.getElementById('sbGhDot').style.background = 'var(--accent)';
+  document.getElementById('sbGhLabel').textContent = 'GitHub: オン';
+  termPrint('output', 'GitHubからログアウトしました');
 }
 
-// ══════════════════════════════════════════════
-// Modal UI helpers
-// ══════════════════════════════════════════════
-function setLoginBtnLoading(loading) {
-  const btn = document.getElementById('login-btn');
-  const label = document.getElementById('login-btn-label');
-  btn.disabled = loading;
-  label.innerHTML = loading
-    ? '<div class="spinner" style="width:13px;height:13px;border-width:2px;border-color:rgba(0,0,0,0.3);border-top-color:#000"></div> 認証中...'
-    : 'ログイン';
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
+termPrint('info', '⚡ GitGUI 起動');
+termPrint('output', '「フォルダを開く」でローカルのGitリポジトリを選択してください。');
+termPrint('output', 'VS Code / Cursor でファイルを編集すると、このパネルに自動反映されます。');
+termPrint('output', 'GitHubと連携するには右上のトグルをオンにしてください。');
+if (!W.supported) {
+  termPrint('error', 'このブラウザはFile System Access APIに非対応です。Chromeをご利用ください。');
+  termPrint('info', 'デモモードで利用中 — ターミナルにgitコマンドを入力してください。');
 }
-
-function showModalError(msg) {
-  const el = document.getElementById('modal-error');
-  el.textContent = msg;
-  el.style.display = 'block';
-}
-
-function hideModalError() {
-  document.getElementById('modal-error').style.display = 'none';
-}
-
-// ══════════════════════════════════════════════
-// Git コマンド
-// ══════════════════════════════════════════════
-function run(raw) {
-  const parts = raw.trim().split(/\s+/);
-  const sub = parts[1] || '';
-
-  if (!S.ready && sub !== 'init') {
-    err('先に <strong>git init</strong> でリポジトリを初期化してください。');
-    chips('git init');
-    return;
-  }
-
-  if (parts[0] !== 'git') {
-    err(`<strong>${escHtml(raw)}</strong> はGitコマンドではありません。<code>git</code> で始めてください。`);
-    return;
-  }
-
-  switch (sub) {
-    case 'init':    cmdInit();             break;
-    case 'add':     cmdAdd(parts[2]);      break;
-    case 'commit':  cmdCommit(parts);      break;
-    case 'push':    cmdPush();             break;
-    case 'pull':    cmdPull();             break;
-    case 'status':  cmdStatus();           break;
-    case 'log':     cmdLog();              break;
-    case 'reset':   cmdReset();            break;
-    case 'restore': cmdRestore(parts.slice(2)); break;
-    default:
-      err(`<strong>git ${escHtml(sub)}</strong> はこのデモでは未対応です。<br>
-           対応: init / add / commit / push / pull / status / log / reset / restore`);
-  }
-}
-
-function cmdInit() {
-  S.ready = true;
-  render();
-  info('🎉',
-    '<strong>.git</strong> フォルダが作成され、バージョン管理が開始されました！<br>' +
-    'ファイルはまだ追跡されていません。',
-    '次: <strong>git add &lt;ファイル名&gt;</strong> または <strong>git add .</strong> でステージングしよう。'
-  );
-  chips('git add README.md', 'git add .', 'git status');
-}
-
-function cmdAdd(target) {
-  if (!target) {
-    err('ファイル名を指定してください。例: <strong>git add README.md</strong> / <strong>git add .</strong>');
-    return;
-  }
-
-  let moved = [];
-  if (target === '.') {
-    moved = S.wd.filter(f => f.type !== 'dir');
-    const dirs = S.wd.filter(f => f.type === 'dir');
-    S.sa.push(...moved);
-    S.wd = dirs;
-  } else {
-    const idx = S.wd.findIndex(f => f.name === target);
-    if (idx === -1) {
-      const avail = S.wd.map(f => f.name).join(', ') || 'ファイルなし';
-      err(`<strong>${escHtml(target)}</strong> は作業ディレクトリにありません。<br>現在: ${avail}`);
-      return;
-    }
-    if (S.wd[idx].type === 'dir') {
-      err(`<strong>${escHtml(target)}</strong> はディレクトリです。ディレクトリを直接 add することはできません。<br><strong>git add .</strong> で配下のファイルをすべて追加できます。`);
-      return;
-    }
-    moved = S.wd.splice(idx, 1);
-    S.sa.push(...moved);
-  }
-
-  const names = moved.map(f => f.name);
-  render(names);
-
-  info('📋',
-    `<strong>${names.join(', ')}</strong> をステージングエリアに追加しました。<br>次のコミットに含まれる準備ができました。`,
-    S.wd.filter(f => f.type !== 'dir').length
-      ? `まだ ${S.wd.filter(f=>f.type!=='dir').length} ファイルが作業ディレクトリにあります。<strong>git commit</strong> するか追加しよう。`
-      : '全ファイルがステージング済みです。<strong>git commit -m "メッセージ"</strong> でコミットしよう！'
-  );
-
-  if (S.wd.filter(f => f.type !== 'dir').length) {
-    chips('git add .', 'git commit -m "update"', 'git status');
-  } else {
-    chips('git commit -m "update"', 'git status');
-  }
-}
-
-function cmdCommit(parts) {
-  if (!S.sa.length) {
-    err('ステージングエリアが空です。先に <strong>git add</strong> でファイルを追加してください。');
-    if (S.wd.length) chips(...S.wd.filter(f=>f.type!=='dir').slice(0,3).map(f => `git add ${f.name}`));
-    return;
-  }
-
-  const mIdx = parts.indexOf('-m');
-  let msg = 'no message';
-  if (mIdx !== -1 && parts[mIdx + 1]) {
-    msg = parts.slice(mIdx + 1).join(' ').replace(/^["']|["']$/g, '');
-  }
-
-  const hash = Math.random().toString(16).slice(2, 9);
-  const files = S.sa.map(f => f.name);
-  const author = GH.user ? {
-    authorName: GH.user.login,
-    authorAvatar: GH.user.avatar_url,
-  } : {};
-
-  S.lr.push({ hash, msg, files, ...author });
-  S.sa = [];
-
-  render(hash);
-  info('✅',
-    `コミット <strong>${hash}</strong> を作成しました！<br>` +
-    `メッセージ: "${escHtml(msg)}"<br>` +
-    `変更ファイル: ${files.join(', ')}`,
-    'リモートに共有するには <strong>git push</strong> しよう！'
-  );
-  chips('git push', 'git log', 'git status');
-}
-
-function cmdPush() {
-  const unpushed = S.lr.length - S.rr.length;
-  if (unpushed <= 0) {
-    info('ℹ️',
-      'すでにリモートと同期済みです。プッシュする新しいコミットはありません。',
-      '新しい変更を加えて <strong>git add → git commit → git push</strong> しよう！'
-    );
-    return;
-  }
-
-  const newCommits = S.lr.slice(S.rr.length);
-  S.rr.push(...newCommits.map(c => ({...c})));
-
-  const lastHash = newCommits[newCommits.length - 1].hash;
-  render(lastHash);
-
-  const target = GH.currentRepo ? `<strong>${escHtml(GH.currentRepo)}</strong>` : '<strong>origin/main</strong>';
-  info('🚀',
-    `${newCommits.length} 件のコミットを ${target} にプッシュしました！<br>` +
-    `他のメンバーがこの変更を参照できるようになりました。`,
-    'チームメンバーは <strong>git pull</strong> で最新の変更を取得できます。'
-  );
-  chips('git log', 'git status');
-}
-
-function cmdPull() {
-  if (S.rr.length <= S.lr.length) {
-    info('ℹ️', 'すでに最新の状態です。取得する新しいコミットはありません。');
-  } else {
-    const newCount = S.rr.length - S.lr.length;
-    S.lr.push(...S.rr.slice(S.lr.length).map(c => ({...c})));
-    render();
-    info('⬇️',
-      `リモートから ${newCount} 件の新しいコミットを取得しました！`,
-      '<strong>git log</strong> で履歴を確認しよう。'
-    );
-  }
-  render();
-}
-
-function cmdStatus() {
-  const wdN = S.wd.filter(f => f.type !== 'dir').length;
-  const saN = S.sa.length;
-  let html = '<strong>現在の状態:</strong><br>';
-  if (!wdN && !saN) {
-    html += 'クリーンな状態です。変更はありません。';
-  } else {
-    if (saN) html += `🟢 ステージング済み (${saN}件): ${S.sa.map(f => f.name).join(', ')}<br>`;
-    if (wdN) html += `🔴 未ステージ (${wdN}件): ${S.wd.filter(f=>f.type!=='dir').map(f => f.name).join(', ')}`;
-  }
-  info('📊', html,
-    saN ? '<strong>git commit -m "..."</strong> でコミットできます。'
-        : wdN ? '<strong>git add</strong> でファイルをステージングしよう。'
-              : ''
-  );
-  render();
-}
-
-function cmdLog() {
-  if (!S.lr.length) {
-    info('📜', 'コミット履歴はまだありません。', '<strong>git add → git commit</strong> でコミットを作成しよう！');
-    return;
-  }
-  const lines = [...S.lr].reverse()
-    .map(c => `<strong>${c.hash}</strong>  ${escHtml(c.msg)}  <span style="color:var(--text-muted)">${c.files.join(', ')}</span>`)
-    .join('<br>');
-  info('📜', `<strong>コミット履歴 (${S.lr.length}件):</strong><br>${lines}`);
-  render();
-}
-
-function cmdReset() {
-  if (!S.sa.length) {
-    err('ステージングエリアは空です。リセットするファイルがありません。');
-    return;
-  }
-  const files = [...S.sa];
-  S.wd.push(...files);
-  S.sa = [];
-  render(files.map(f => f.name));
-  info('↩️',
-    `ステージングエリアの ${files.length} ファイルを作業ディレクトリに戻しました。<br>` +
-    `ファイル: ${files.map(f => f.name).join(', ')}`,
-    '再度 <strong>git add</strong> でステージングできます。'
-  );
-  chips(...S.wd.filter(f=>f.type!=='dir').slice(0,3).map(f => `git add ${f.name}`));
-}
-
-function cmdRestore(args) {
-  const target = args.find(a => !a.startsWith('-'));
-  if (!target) {
-    err('ファイル名を指定してください。例: <strong>git restore --staged README.md</strong>');
-    return;
-  }
-  const staged = args.includes('--staged') || args.includes('-S');
-  if (staged) {
-    const idx = S.sa.findIndex(f => f.name === target);
-    if (idx === -1) {
-      err(`<strong>${escHtml(target)}</strong> はステージングエリアにありません。`);
-      return;
-    }
-    const f = S.sa.splice(idx, 1)[0];
-    S.wd.push(f);
-    render([f.name]);
-    info('↩️',
-      `<strong>${f.name}</strong> をステージングエリアから取り出しました。`,
-      '再度 <strong>git add</strong> でステージングできます。'
-    );
-  } else {
-    info('ℹ️',
-      `<strong>git restore ${escHtml(target)}</strong>: 作業ディレクトリの変更を直前のコミットに戻します。<br>（このデモではファイル内容の変更は追跡していません）`
-    );
-  }
-}
-
-// ══════════════════════════════════════════════
-// Input
-// ══════════════════════════════════════════════
-document.getElementById('cmd').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') {
-    const v = this.value.trim();
-    if (v) { run(v); this.value = ''; }
-  }
-});
-
-// Enter key for modal token input
-document.getElementById('token-input').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') doLogin();
-});
-
-// ══════════════════════════════════════════════
-// Init
-// ══════════════════════════════════════════════
 render();
 </script>
 </body>
