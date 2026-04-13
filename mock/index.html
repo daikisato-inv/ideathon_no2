@@ -796,16 +796,21 @@ function handleIndexChange(newEntries) {
   // Un-staged (removed from index)
   for (const [name] of W.prevIndexEntries) {
     if (!newEntries.has(name)) {
+      // ① S.sa になくても必ず W.stagedFiles を解放（pollFiles の永続スキップを防ぐ）
+      W.stagedFiles.delete(name);
       const si = S.sa.findIndex(f => f.name === name);
       if (si >= 0) {
+        // SA に実体がある通常ケース
         const f = S.sa.splice(si, 1)[0];
-        W.stagedFiles.delete(name);
-        // ── FIX 1 & 2: restore original status, including untracked and deleted ──
         const restoreStatus = f.origStatus || (f.status === 'staged-del' ? 'deleted' : 'untracked');
         S.wd.push({ name, icon: f.icon, status: restoreStatus });
-        changed = true;
-        termPrint('output', `- unstaged: ${name}`);
+      } else {
+        // ② SA に実体がない（接続前にステージ済み等）でも WD へ復帰させる
+        S.wd.push({ name, icon: getFileIcon(name), status: 'untracked' });
       }
+      // ③ si の結果に関わらず changed をセット → render() が必ず呼ばれる
+      changed = true;
+      termPrint('output', `- unstaged: ${name}`);
     }
   }
 
@@ -1051,14 +1056,18 @@ function handleTermCmd(raw) {
     case 'restore': {
       if (parts[2] === '--staged') {
         const fname = parts[3];
+        // ① W.stagedFiles は si の結果に関わらず解放
+        W.stagedFiles.delete(fname);
         const si = S.sa.findIndex(f => f.name === fname);
         if (si >= 0) {
           const f = S.sa.splice(si, 1)[0];
-          // ── FIX 1 & 2: use origStatus ──
           const restoreStatus = f.origStatus || (f.status === 'staged-del' ? 'deleted' : 'untracked');
           S.wd.push({ name: f.name, icon: f.icon, status: restoreStatus });
-          render(); termPrint('output',`Unstaged: ${fname}`);
+        } else {
+          // ② SA になくても WD へ復帰
+          S.wd.push({ name: fname, icon: getFileIcon(fname), status: 'untracked' });
         }
+        render(); termPrint('output', `Unstaged: ${fname}`);
       } else {
         const fname = parts[2];
         const wi = S.wd.findIndex(f=>f.name===fname);
