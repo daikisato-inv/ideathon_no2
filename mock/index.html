@@ -6,65 +6,29 @@
   <title>GitGUI - Gitを視覚的に学ぼう</title>
   <style>
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --border: #30363d;
-      --text: #c9d1d9;
-      --text-muted: #8b949e;
-      --working-bg: #0d2137;
-      --working-border: #2d6da3;
-      --staging-bg: #1f1a0d;
-      --staging-border: #d97706;
-      --local-bg: #0d1f0d;
-      --local-border: #2d8a2d;
-      --remote-bg: #150d1f;
-      --remote-border: #7c3aed;
-      --accent: #58a6ff;
-      --success: #56d364;
-      --warning: #e3b341;
-      --error: #f85149;
+      --bg: #0d1117; --surface: #161b22; --border: #30363d;
+      --text: #c9d1d9; --text-muted: #8b949e;
+      --working-bg: #0d2137; --working-border: #2d6da3;
+      --staging-bg: #1f1a0d; --staging-border: #d97706;
+      --local-bg: #0d1f0d; --local-border: #2d8a2d;
+      --remote-bg: #150d1f; --remote-border: #7c3aed;
+      --accent: #58a6ff; --success: #56d364; --warning: #e3b341; --error: #f85149;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
 
-    /* ── Header ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 48px;
-      flex-shrink: 0;
-      gap: 12px;
-    }
+    /* Header */
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; height: 48px; flex-shrink: 0; gap: 12px; }
     .header-left { display: flex; align-items: center; gap: 12px; }
     .logo { font-size: 17px; font-weight: 700; color: var(--accent); letter-spacing: -.5px; white-space: nowrap; }
     .logo span { color: #fff; }
     .tagline { font-size: 11px; color: var(--text-muted); }
-
-    /* Folder button */
-    .btn-folder {
-      display: flex; align-items: center; gap: 6px;
-      background: #21262d; border: 1px solid #444c56;
-      color: var(--text); padding: 4px 11px;
-      border-radius: 6px; font-size: 12px; cursor: pointer;
-      transition: background .15s; white-space: nowrap;
-    }
+    .btn-folder { display: flex; align-items: center; gap: 6px; background: #21262d; border: 1px solid #444c56; color: var(--text); padding: 4px 11px; border-radius: 6px; font-size: 12px; cursor: pointer; transition: background .15s; white-space: nowrap; }
     .btn-folder:hover { background: #30363d; }
     .btn-folder.connected { border-color: var(--success); color: var(--success); }
     .folder-name { font-family: 'Courier New', monospace; font-size: 11px; color: var(--text-muted); max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-    /* GitHub area */
+    /* GH area */
     .gh-area { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
     .toggle-wrap { display: flex; align-items: center; gap: 6px; cursor: pointer; user-select: none; }
     .toggle-label { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
@@ -90,19 +54,11 @@
     .btn-logout { background: transparent; border: 1px solid #444c56; color: var(--text-muted); padding: 3px 9px; border-radius: 6px; font-size: 11px; cursor: pointer; transition: all .15s; white-space: nowrap; }
     .btn-logout:hover { border-color: var(--error); color: var(--error); }
 
-    /* ── Browser compat banner ── */
-    .compat-banner {
-      background: rgba(248,81,73,.12);
-      border-bottom: 1px solid rgba(248,81,73,.3);
-      padding: 6px 16px;
-      font-size: 11px;
-      color: #f85149;
-      text-align: center;
-      flex-shrink: 0;
-    }
+    /* Compat banner */
+    .compat-banner { background: rgba(248,81,73,.12); border-bottom: 1px solid rgba(248,81,73,.3); padding: 6px 16px; font-size: 11px; color: #f85149; text-align: center; flex-shrink: 0; }
     .compat-banner.hidden { display: none; }
 
-    /* ── Modal ── */
+    /* Modal */
     .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display: flex; align-items: center; justify-content: center; z-index: 1000; backdrop-filter: blur(4px); }
     .modal-overlay.hidden { display: none !important; }
     .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px; width: 420px; max-width: calc(100vw - 32px); padding: 26px; display: flex; flex-direction: column; gap: 18px; }
@@ -115,7 +71,6 @@
     .pat-steps { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 11px 13px; display: flex; flex-direction: column; gap: 6px; }
     .pat-step { font-size: 12px; color: var(--text-muted); display: flex; gap: 7px; align-items: flex-start; line-height: 1.4; }
     .pat-step-num { width: 15px; height: 15px; border-radius: 50%; background: #21262d; border: 1px solid #444; font-size: 9px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
-    .pat-link { color: var(--accent); cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
     .token-input-wrap { display: flex; flex-direction: column; gap: 5px; }
     .token-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
     .token-input { width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 6px; color: var(--text); padding: 7px 11px; font-family: 'Courier New', monospace; font-size: 13px; outline: none; }
@@ -129,80 +84,131 @@
     .btn-secondary { background: #21262d; color: var(--text); border: 1px solid #444c56; padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer; }
     .btn-secondary:hover { background: #30363d; }
 
-    /* ── App body ── */
-    .app-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 10px 14px; gap: 8px; }
+    /* App body */
+    .app-body { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 8px 12px; gap: 8px; }
 
-    /* Flow row */
-    .flow-row { display: flex; align-items: stretch; flex: 1; min-height: 0; }
-    .zone { flex: 1; border-radius: 10px; border: 2px solid; display: flex; flex-direction: column; overflow: hidden; }
+    /* ── Nested layout ── */
+    .flow-outer { display: flex; align-items: stretch; flex: 1; min-height: 0; gap: 0; }
+
+    /* Local outer box */
+    .local-box {
+      flex: 10; border: 2px solid #2d4f7a; border-radius: 12px;
+      background: rgba(13,33,55,.25); display: flex; flex-direction: column;
+      overflow: hidden; min-width: 0;
+    }
+    .local-box-header {
+      padding: 3px 12px; font-size: 10px; font-weight: 700; letter-spacing: .1em;
+      color: #4a90d9; text-transform: uppercase; flex-shrink: 0;
+      border-bottom: 1px solid rgba(45,79,122,.4);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .inner-flow { display: flex; align-items: stretch; flex: 1; min-height: 0; padding: 6px 6px 6px 6px; gap: 0; }
+
+    /* Outer push/fetch arrow */
+    .outer-arrow-col {
+      width: 58px; flex-shrink: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 3px;
+    }
+    .outer-arrow-push { font-size: 8px; font-family: monospace; color: rgba(88,166,255,.55); white-space: nowrap; }
+    .outer-arrow-fetch { font-size: 8px; font-family: monospace; color: rgba(167,139,250,.55); white-space: nowrap; }
+    .outer-arrow-sym { font-size: 18px; color: rgba(255,255,255,.22); }
+
+    /* Remote outer box */
+    .remote-box {
+      flex: 3; border: 2px solid #4a2a7a; border-radius: 12px;
+      background: rgba(21,13,31,.4); display: flex; flex-direction: column;
+      overflow: hidden; min-width: 0;
+    }
+    .remote-box-header {
+      padding: 3px 12px; font-size: 10px; font-weight: 700; letter-spacing: .1em;
+      color: #9c6fef; text-transform: uppercase; flex-shrink: 0;
+      border-bottom: 1px solid rgba(74,42,122,.4);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .remote-box-inner { flex: 1; padding: 6px; display: flex; flex-direction: column; min-height: 0; }
+
+    /* Zones */
+    .zone { flex: 1; border-radius: 8px; border: 1px solid; display: flex; flex-direction: column; overflow: hidden; }
     .zone-working { background: var(--working-bg); border-color: var(--working-border); }
     .zone-staging { background: var(--staging-bg); border-color: var(--staging-border); }
     .zone-local   { background: var(--local-bg);   border-color: var(--local-border);   }
     .zone-remote  { background: var(--remote-bg);  border-color: var(--remote-border);  }
     .zone-remote.gh-connected { box-shadow: 0 0 0 1px rgba(124,58,237,.4); }
-    .zone-header { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 7px; flex-shrink: 0; }
+    .zone-header { padding: 6px 10px; border-bottom: 1px solid rgba(255,255,255,.07); display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
     .zone-header-r { margin-left: auto; }
     .zone-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; background: rgba(124,58,237,.2); color: #a78bfa; font-weight: 600; border: 1px solid rgba(124,58,237,.3); }
-    .zone-icon { font-size: 14px; }
-    .zone-title { font-weight: 600; font-size: 12px; line-height: 1.2; }
-    .zone-sub { font-size: 10px; color: var(--text-muted); }
-    .zone-body { flex: 1; padding: 7px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    .zone-icon { font-size: 13px; }
+    .zone-title { font-weight: 600; font-size: 11px; line-height: 1.2; }
+    .zone-sub { font-size: 9px; color: var(--text-muted); }
+    .zone-body { flex: 1; padding: 6px; overflow-y: auto; display: flex; flex-direction: column; gap: 3px; }
 
-    /* Arrows */
-    .arrow-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 46px; flex-shrink: 0; gap: 2px; }
-    .arrow-cmd { font-size: 8px; font-family: monospace; color: rgba(255,255,255,.3); text-align: center; white-space: nowrap; }
-    .arrow-sym { font-size: 20px; color: rgba(255,255,255,.18); line-height: 1; }
+    /* Inner arrows */
+    .arrow-col { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 42px; flex-shrink: 0; gap: 2px; }
+    .arrow-cmd { font-size: 7px; font-family: monospace; color: rgba(255,255,255,.28); text-align: center; white-space: nowrap; }
+    .arrow-sym { font-size: 18px; color: rgba(255,255,255,.15); line-height: 1; }
 
-    /* Cards */
-    @keyframes cardIn { from { opacity:0; transform:translateY(-6px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
-    @keyframes pulseFx {
-      0%   { box-shadow: 0 0 0 0 rgba(88,166,255,.5); }
-      70%  { box-shadow: 0 0 0 6px rgba(88,166,255,0); }
-      100% { box-shadow: 0 0 0 0 rgba(88,166,255,0); }
-    }
-    .file-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 5px; padding: 5px 9px; display: flex; align-items: center; gap: 6px; font-size: 11px; animation: cardIn .2s ease; }
+    /* File cards */
+    @keyframes cardIn { from { opacity:0; transform:translateY(-5px) scale(.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+    @keyframes pulseFx { 0%{box-shadow:0 0 0 0 rgba(88,166,255,.5)} 70%{box-shadow:0 0 0 6px rgba(88,166,255,0)} 100%{box-shadow:0 0 0 0 rgba(88,166,255,0)} }
+    .file-card { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1); border-radius: 5px; padding: 4px 8px; display: flex; align-items: center; gap: 5px; font-size: 11px; animation: cardIn .2s ease; }
     .file-card.highlight { animation: cardIn .2s ease, pulseFx .7s ease .1s; }
     .file-card.is-deleted { opacity: .65; }
-    .fc-ico  { font-size: 12px; flex-shrink: 0; }
-    .fc-name { font-family: 'Courier New', monospace; flex: 1; font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fc-ico { font-size: 11px; flex-shrink: 0; }
+    .fc-name { font-family: 'Courier New', monospace; flex: 1; font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .fc-name.del { text-decoration: line-through; }
-    .fc-badge { font-size: 9px; padding: 1px 5px; border-radius: 3px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
-    .fc-badge.untracked { background: rgba(86,211,100,.2);  color: #56d364; }
+    .fc-badge { font-size: 8px; padding: 1px 4px; border-radius: 3px; font-weight: 700; white-space: nowrap; flex-shrink: 0; }
+    .fc-badge.untracked { background: rgba(86,211,100,.2); color: #56d364; }
     .fc-badge.modified  { background: rgba(227,179,65,.2);  color: #e3b341; }
     .fc-badge.deleted   { background: rgba(248,81,73,.2);   color: #f85149; }
     .fc-badge.staged    { background: rgba(88,166,255,.2);  color: var(--accent); }
     .fc-badge.staged-del{ background: rgba(248,81,73,.15);  color: #f85149; border: 1px solid rgba(248,81,73,.3); }
 
-    /* Commit cards */
-    .commit-card { background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08); border-radius: 5px; padding: 6px 10px; font-size: 11px; display: flex; flex-direction: column; gap: 3px; animation: cardIn .2s ease; }
-    .commit-card.highlight { animation: cardIn .2s ease, pulseFx .7s ease .1s; }
-    .commit-hash { font-family: 'Courier New', monospace; color: var(--accent); font-size: 10px; }
-    .commit-msg  { color: var(--text); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .commit-files { font-size: 10px; color: var(--text-muted); }
-
-    /* Empty zone hint */
-    .zone-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; opacity: .25; padding: 20px; text-align: center; }
-    .zone-empty-icon { font-size: 22px; }
-    .zone-empty-text { font-size: 10px; line-height: 1.5; }
-
-    /* ── Terminal ── */
-    .terminal-bar {
-      height: 130px; flex-shrink: 0;
-      background: #0d1117; border: 1px solid var(--border);
-      border-radius: 8px; display: flex; flex-direction: column;
-      overflow: hidden;
+    /* ── Branch graph ── */
+    .branch-graph { display: flex; flex-direction: column; }
+    .graph-row { display: flex; align-items: stretch; position: relative; min-height: 44px; }
+    /* vertical line connecting commits */
+    .graph-row:not(:last-child)::after {
+      content: ''; position: absolute;
+      left: 8px; top: 18px; bottom: 0; width: 2px;
+      background: rgba(88,166,255,.25);
     }
-    .term-titlebar {
-      display: flex; align-items: center; padding: 5px 10px;
-      background: #161b22; border-bottom: 1px solid var(--border);
-      gap: 6px; flex-shrink: 0;
+    .graph-row.remote-row:not(:last-child)::after { background: rgba(167,139,250,.25); }
+    .graph-rail { width: 20px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; padding-top: 8px; }
+    .graph-node {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent); border: 2px solid var(--bg);
+      flex-shrink: 0; position: relative; z-index: 1;
     }
+    .graph-node.node-head { background: var(--success); }
+    .graph-node.node-remote-track { background: #a78bfa; }
+    .graph-node.node-origin { background: #a78bfa; }
+    @keyframes nodeIn { from { transform: scale(0); } to { transform: scale(1); } }
+    .graph-node.new-node { animation: nodeIn .3s ease; }
+    .graph-info { flex: 1; padding: 5px 4px 8px 6px; min-width: 0; }
+    .graph-refs { display: flex; flex-wrap: wrap; gap: 3px; margin-bottom: 3px; }
+    .ref-badge { font-size: 8px; padding: 0px 5px; border-radius: 3px; font-weight: 700; line-height: 16px; }
+    .ref-head   { background: rgba(86,211,100,.2);  color: #56d364; border: 1px solid rgba(86,211,100,.35); }
+    .ref-local  { background: rgba(88,166,255,.2);  color: var(--accent); border: 1px solid rgba(88,166,255,.35); }
+    .ref-remote { background: rgba(167,139,250,.2); color: #a78bfa;  border: 1px solid rgba(167,139,250,.35); }
+    .ref-tag    { background: rgba(227,179,65,.15); color: #e3b341;  border: 1px solid rgba(227,179,65,.3); }
+    .graph-hash { font-family: 'Courier New', monospace; color: var(--accent); font-size: 9px; }
+    .graph-msg  { color: var(--text); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+    .graph-files { font-size: 9px; color: var(--text-muted); }
+
+    /* Empty hint */
+    .zone-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; opacity: .22; padding: 16px; text-align: center; }
+    .zone-empty-icon { font-size: 20px; }
+    .zone-empty-text { font-size: 9px; line-height: 1.5; }
+
+    /* Terminal */
+    .terminal-bar { height: 128px; flex-shrink: 0; background: #0d1117; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; overflow: hidden; }
+    .term-titlebar { display: flex; align-items: center; padding: 5px 10px; background: #161b22; border-bottom: 1px solid var(--border); gap: 6px; flex-shrink: 0; }
     .term-dot { width: 10px; height: 10px; border-radius: 50%; }
     .term-dot.r { background: #f85149; } .term-dot.y { background: #e3b341; } .term-dot.g { background: #56d364; }
     .term-title { font-size: 10px; color: var(--text-muted); margin-left: 4px; }
     .term-mode { margin-left: auto; font-size: 9px; color: var(--text-muted); padding: 1px 6px; border-radius: 3px; background: rgba(255,255,255,.06); }
     .term-mode.live { color: var(--success); background: rgba(86,211,100,.1); }
-    .term-body { flex: 1; overflow-y: auto; padding: 5px 10px; display: flex; flex-direction: column; gap: 1px; }
+    .term-body { flex: 1; overflow-y: auto; padding: 4px 10px; display: flex; flex-direction: column; gap: 1px; }
     .term-line { font-family: 'Courier New', monospace; font-size: 11px; line-height: 1.5; }
     .term-line.prompt { color: var(--success); }
     .term-line.output { color: var(--text-muted); }
@@ -212,28 +218,22 @@
     .term-ps1 { font-family: 'Courier New', monospace; font-size: 11px; color: var(--success); flex-shrink: 0; }
     .term-input { flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-family: 'Courier New', monospace; font-size: 11px; }
 
-    /* ── Watch indicator ── */
+    /* Watch indicator */
     @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.2} }
     .watch-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: blink 1.4s ease-in-out infinite; flex-shrink: 0; }
     .watch-info { font-size: 10px; color: var(--text-muted); }
 
-    /* ── Status bar ── */
-    .statusbar {
-      height: 22px; flex-shrink: 0;
-      background: #1c2128; border-top: 1px solid var(--border);
-      display: flex; align-items: center; padding: 0 12px; gap: 14px;
-    }
+    /* Status bar */
+    .statusbar { height: 22px; flex-shrink: 0; background: #1c2128; border-top: 1px solid var(--border); display: flex; align-items: center; padding: 0 12px; gap: 14px; }
     .sb-item { font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
     .sb-dot { width: 6px; height: 6px; border-radius: 50%; }
-    .sb-dot.green { background: var(--success); }
-    .sb-dot.yellow { background: var(--warning); }
-    .sb-dot.blue { background: var(--accent); }
-    .sb-dot.gray { background: #444; }
+
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
 
-<!-- ── GitHub PAT Modal ── -->
+<!-- GitHub PAT Modal -->
 <div class="modal-overlay hidden" id="ghModal">
   <div class="modal">
     <div class="modal-header">
@@ -241,7 +241,7 @@
         <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0112 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
       </div>
       <div class="modal-title">GitHubと連携</div>
-      <div class="modal-desc">Personal Access Token (PAT) を入力してGitHubアカウントと連携します。<br>トークンはブラウザにのみ保存され、外部に送信されません。</div>
+      <div class="modal-desc">Personal Access Token (PAT) を入力してGitHubアカウントと連携します。<br>トークンはブラウザにのみ保存されます。</div>
     </div>
     <div class="pat-steps">
       <div class="pat-step"><div class="pat-step-num">1</div><span>GitHub → Settings → Developer settings → Personal access tokens → Tokens (classic)</span></div>
@@ -255,26 +255,24 @@
     <div class="modal-error" id="modalError"></div>
     <div class="modal-actions">
       <button class="btn-secondary" id="btnModalCancel">キャンセル</button>
-      <button class="btn-primary" id="btnModalConnect">
-        <span id="modalBtnLabel">連携する</span>
-      </button>
+      <button class="btn-primary" id="btnModalConnect"><span id="modalBtnLabel">連携する</span></button>
     </div>
   </div>
 </div>
 
-<!-- ── Header ── -->
+<!-- Header -->
 <header>
   <div class="header-left">
     <div class="logo">Git<span>GUI</span></div>
     <div class="tagline">Gitの動きを視覚的に学ぼう</div>
-    <div id="folderArea" style="display:flex;align-items:center;gap:8px;">
+    <div style="display:flex;align-items:center;gap:8px;">
       <button class="btn-folder" id="btnOpenFolder" onclick="openFolder()">
         <span>📁</span> フォルダを開く
       </button>
       <span class="folder-name hidden" id="folderName"></span>
     </div>
   </div>
-  <div class="gh-area" id="ghArea">
+  <div class="gh-area">
     <label class="toggle-wrap">
       <span class="toggle-label">GitHub連携</span>
       <div class="toggle-switch">
@@ -305,118 +303,132 @@
   </div>
 </header>
 
-<!-- ── Browser compat banner ── -->
+<!-- Browser compat banner -->
 <div class="compat-banner hidden" id="compatBanner">
-  ⚠ お使いのブラウザはFile System Access APIに対応していません。Chrome / Edgeをご利用ください。フォルダ監視機能はデモモードで動作します。
+  ⚠ このブラウザはFile System Access APIに対応していません。Chrome / Edge をご利用ください。フォルダ監視はデモモードで動作します。
 </div>
 
-<!-- ── App Body ── -->
+<!-- App Body -->
 <div class="app-body">
 
-  <!-- Flow row: 4 zones -->
-  <div class="flow-row">
+  <!-- Nested local / remote layout -->
+  <div class="flow-outer">
 
-    <!-- Working Directory -->
-    <div class="zone zone-working" id="zone-wd">
-      <div class="zone-header">
-        <span class="zone-icon">💻</span>
-        <div>
-          <div class="zone-title">作業ディレクトリ</div>
-          <div class="zone-sub">Working Directory</div>
-        </div>
-        <div class="zone-header-r" id="watchIndicator" style="display:none;align-items:center;gap:5px;">
+    <!-- ローカル box -->
+    <div class="local-box">
+      <div class="local-box-header">
+        💻 ローカル (Local)
+        <div style="margin-left:auto;display:flex;align-items:center;gap:5px;" id="watchIndicator" style="display:none">
           <div class="watch-dot"></div>
           <span class="watch-info">監視中</span>
         </div>
       </div>
-      <div class="zone-body" id="wd-body">
-        <div class="zone-empty" id="wd-empty">
-          <div class="zone-empty-icon">📁</div>
-          <div class="zone-empty-text">「フォルダを開く」でローカルリポジトリを<br>選択するとファイルが表示されます</div>
+      <div class="inner-flow">
+
+        <!-- Working Directory -->
+        <div class="zone zone-working" id="zone-wd">
+          <div class="zone-header">
+            <span class="zone-icon">📂</span>
+            <div>
+              <div class="zone-title">作業ディレクトリ</div>
+              <div class="zone-sub">Working Directory</div>
+            </div>
+          </div>
+          <div class="zone-body" id="wd-body">
+            <div class="zone-empty" id="wd-empty">
+              <div class="zone-empty-icon">📁</div>
+              <div class="zone-empty-text">「フォルダを開く」でリポジトリを<br>選択するとファイルが表示されます</div>
+            </div>
+          </div>
         </div>
-      </div>
+
+        <div class="arrow-col">
+          <div class="arrow-cmd">git add</div>
+          <div class="arrow-sym">→</div>
+        </div>
+
+        <!-- Staging Area -->
+        <div class="zone zone-staging" id="zone-sa">
+          <div class="zone-header">
+            <span class="zone-icon">📦</span>
+            <div>
+              <div class="zone-title">ステージングエリア</div>
+              <div class="zone-sub">Staging Area (Index)</div>
+            </div>
+          </div>
+          <div class="zone-body" id="sa-body">
+            <div class="zone-empty" id="sa-empty">
+              <div class="zone-empty-icon">📦</div>
+              <div class="zone-empty-text">git add したファイルが<br>ここに移動します</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arrow-col">
+          <div class="arrow-cmd">git commit</div>
+          <div class="arrow-sym">→</div>
+        </div>
+
+        <!-- Local Repository -->
+        <div class="zone zone-local" id="zone-lr">
+          <div class="zone-header">
+            <span class="zone-icon">🗄</span>
+            <div>
+              <div class="zone-title">ローカルリポジトリ</div>
+              <div class="zone-sub">Local Repository</div>
+            </div>
+          </div>
+          <div class="zone-body" id="lr-body">
+            <div class="zone-empty" id="lr-empty">
+              <div class="zone-empty-icon">🗄</div>
+              <div class="zone-empty-text">git commit するとここに<br>コミットが積まれます</div>
+            </div>
+            <div class="branch-graph" id="lr-graph"></div>
+          </div>
+        </div>
+
+      </div><!-- /inner-flow -->
+    </div><!-- /local-box -->
+
+    <!-- Push/Fetch arrows -->
+    <div class="outer-arrow-col">
+      <div class="outer-arrow-push">git push →</div>
+      <div class="outer-arrow-sym">⇄</div>
+      <div class="outer-arrow-fetch">← git fetch</div>
     </div>
 
-    <!-- Arrow WD→SA -->
-    <div class="arrow-col">
-      <div class="arrow-cmd">git add</div>
-      <div class="arrow-sym">→</div>
-    </div>
-
-    <!-- Staging Area -->
-    <div class="zone zone-staging" id="zone-sa">
-      <div class="zone-header">
-        <span class="zone-icon">📦</span>
-        <div>
-          <div class="zone-title">ステージングエリア</div>
-          <div class="zone-sub">Staging Area (Index)</div>
+    <!-- リモート box -->
+    <div class="remote-box">
+      <div class="remote-box-header">
+        ☁️ リモート (Remote)
+        <span class="zone-badge" id="remoteBadge" style="display:none;margin-left:auto">GitHub</span>
+      </div>
+      <div class="remote-box-inner">
+        <div class="zone zone-remote" id="zone-rr" style="flex:1">
+          <div class="zone-header">
+            <span class="zone-icon">🌐</span>
+            <div>
+              <div class="zone-title">リモートリポジトリ</div>
+              <div class="zone-sub">origin / Remote Tracking</div>
+            </div>
+          </div>
+          <div class="zone-body" id="rr-body">
+            <div class="zone-empty" id="rr-empty">
+              <div class="zone-empty-icon">☁️</div>
+              <div class="zone-empty-text">git push するとここに<br>反映されます</div>
+            </div>
+            <div class="branch-graph" id="rr-graph"></div>
+          </div>
         </div>
       </div>
-      <div class="zone-body" id="sa-body">
-        <div class="zone-empty" id="sa-empty">
-          <div class="zone-empty-icon">📦</div>
-          <div class="zone-empty-text">git add したファイルが<br>ここに移動します</div>
-        </div>
-      </div>
-    </div>
+    </div><!-- /remote-box -->
 
-    <!-- Arrow SA→LR -->
-    <div class="arrow-col">
-      <div class="arrow-cmd">git commit</div>
-      <div class="arrow-sym">→</div>
-    </div>
-
-    <!-- Local Repository -->
-    <div class="zone zone-local" id="zone-lr">
-      <div class="zone-header">
-        <span class="zone-icon">🗄</span>
-        <div>
-          <div class="zone-title">ローカルリポジトリ</div>
-          <div class="zone-sub">Local Repository</div>
-        </div>
-      </div>
-      <div class="zone-body" id="lr-body">
-        <div class="zone-empty" id="lr-empty">
-          <div class="zone-empty-icon">🗄</div>
-          <div class="zone-empty-text">git commit するとここに<br>コミットが積まれます</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Arrow LR→RR -->
-    <div class="arrow-col">
-      <div class="arrow-cmd">git push</div>
-      <div class="arrow-sym">→</div>
-    </div>
-
-    <!-- Remote Repository -->
-    <div class="zone zone-remote" id="zone-rr">
-      <div class="zone-header">
-        <span class="zone-icon">☁️</span>
-        <div>
-          <div class="zone-title">リモートリポジトリ</div>
-          <div class="zone-sub">Remote Repository</div>
-        </div>
-        <div class="zone-header-r">
-          <span class="zone-badge" id="remoteBadge" style="display:none">GitHub</span>
-        </div>
-      </div>
-      <div class="zone-body" id="rr-body">
-        <div class="zone-empty" id="rr-empty">
-          <div class="zone-empty-icon">☁️</div>
-          <div class="zone-empty-text">git push するとここに<br>反映されます</div>
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /flow-row -->
+  </div><!-- /flow-outer -->
 
   <!-- Terminal -->
   <div class="terminal-bar">
     <div class="term-titlebar">
-      <div class="term-dot r"></div>
-      <div class="term-dot y"></div>
-      <div class="term-dot g"></div>
+      <div class="term-dot r"></div><div class="term-dot y"></div><div class="term-dot g"></div>
       <span class="term-title">Terminal</span>
       <span class="term-mode" id="termMode">デモモード</span>
     </div>
@@ -429,12 +441,12 @@
 
 </div><!-- /app-body -->
 
-<!-- ── Status bar ── -->
+<!-- Status bar -->
 <div class="statusbar">
   <div class="sb-item"><div class="sb-dot" id="sbWatchDot" style="background:#444"></div><span id="sbWatchLabel">未接続</span></div>
   <div class="sb-item"><div class="sb-dot" id="sbGhDot" style="background:#444"></div><span id="sbGhLabel">GitHub: オフ</span></div>
-  <div class="sb-item" id="sbBranch" style="display:none">🌿 <span id="sbBranchName">main</span></div>
-  <div class="sb-item" id="sbPollRate" style="display:none;margin-left:auto">ポーリング: 800ms</div>
+  <div class="sb-item hidden" id="sbBranch">🌿 <span id="sbBranchName">main</span></div>
+  <div class="sb-item hidden" id="sbPollRate" style="margin-left:auto">ポーリング: 800ms</div>
 </div>
 
 <script>
@@ -442,120 +454,126 @@
 //  STATE
 // ═══════════════════════════════════════════════════════════════
 const S = {
-  wd: [], // { name, icon, type, status }
-  sa: [], // { name, icon, type, status }
+  wd: [], // { name, icon, status }
+  sa: [], // { name, icon, status, origStatus }  ← origStatus tracks pre-stage status
   lr: [], // { hash, msg, files }
   rr: [], // { hash, msg, files }
 };
 
-// Watcher state
 const W = {
-  rootHandle: null,
-  gitHandle: null,
-  prevFiles: new Map(),       // name → { lm, size }
-  prevIndexEntries: new Map(),// name → sha1hex
+  rootHandle: null, gitHandle: null,
+  prevFiles: new Map(),        // name → { lm, size }
+  prevIndexEntries: new Map(), // name → sha1hex
   prevCommitHash: null,
   prevRemoteHash: null,
-  stagedFiles: new Set(),     // files currently in SA (moved from WD)
+  remoteTrackHash: null,       // 7-char hash that origin/branch points to in LR
+  stagedFiles: new Set(),
   interval: null,
-  folderName: '',
-  branch: 'main',
+  folderName: '', branch: 'main',
   supported: 'showDirectoryPicker' in window,
 };
 
-// GitHub state
-const GH = {
-  enabled: false,
-  token: null,
-  user: null,
-  repos: [],
-  activeRepo: null,
-};
+const GH = { enabled: false, token: null, user: null, repos: [], activeRepo: null };
 
 // ═══════════════════════════════════════════════════════════════
-//  COMPAT CHECK
+//  COMPAT
 // ═══════════════════════════════════════════════════════════════
-if (!W.supported) {
-  document.getElementById('compatBanner').classList.remove('hidden');
-}
+if (!W.supported) document.getElementById('compatBanner').classList.remove('hidden');
 
 // ═══════════════════════════════════════════════════════════════
 //  RENDER
 // ═══════════════════════════════════════════════════════════════
 function getFileIcon(name) {
-  const ext = name.split('.').pop().toLowerCase();
-  const map = { js:'🟨', ts:'🔷', jsx:'🟦', tsx:'🔷', html:'🧡', css:'🎨', scss:'🎨',
-    json:'📋', md:'📝', py:'🐍', go:'🐹', rs:'🦀', java:'☕', rb:'💎',
-    sh:'⚡', yml:'⚙️', yaml:'⚙️', toml:'⚙️', gitignore:'🚫', env:'🔑',
-    png:'🖼', jpg:'🖼', jpeg:'🖼', gif:'🖼', svg:'🖼', pdf:'📄',
-  };
-  return map[ext] || '📄';
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const m = { js:'🟨',ts:'🔷',jsx:'🟦',tsx:'🔷',html:'🧡',css:'🎨',scss:'🎨',
+    json:'📋',md:'📝',py:'🐍',go:'🐹',rs:'🦀',java:'☕',rb:'💎',
+    sh:'⚡',yml:'⚙️',yaml:'⚙️',toml:'⚙️',env:'🔑',
+    png:'🖼',jpg:'🖼',jpeg:'🖼',gif:'🖼',svg:'🖼',pdf:'📄' };
+  return m[ext] || '📄';
 }
 
-function badgeLabel(status) {
-  const m = { untracked:'new', modified:'modified', deleted:'deleted', staged:'staged', 'staged-del':'staged(del)' };
-  return m[status] || status;
-}
+const BADGE_LABEL = { untracked:'new', modified:'modified', deleted:'deleted', staged:'staged', 'staged-del':'staged(del)' };
 
 function renderFileCard(f, highlight) {
   const card = document.createElement('div');
   card.className = 'file-card' + (highlight ? ' highlight' : '') + (f.status === 'deleted' ? ' is-deleted' : '');
-  const del = f.status === 'deleted';
+  const isDel = f.status === 'deleted';
   card.innerHTML = `
     <span class="fc-ico">${f.icon || getFileIcon(f.name)}</span>
-    <span class="fc-name${del ? ' del' : ''}">${esc(f.name)}</span>
-    <span class="fc-badge ${f.status}">${badgeLabel(f.status)}</span>
-  `;
+    <span class="fc-name${isDel ? ' del' : ''}">${esc(f.name)}</span>
+    <span class="fc-badge ${f.status}">${BADGE_LABEL[f.status] || f.status}</span>`;
   return card;
 }
 
-function renderCommitCard(c, highlight) {
-  const card = document.createElement('div');
-  card.className = 'commit-card' + (highlight ? ' highlight' : '');
-  const files = c.files && c.files.length ? `${c.files.length}ファイル` : '';
-  card.innerHTML = `
-    <div class="commit-hash">${esc(c.hash)}</div>
-    <div class="commit-msg">${esc(c.msg)}</div>
-    ${files ? `<div class="commit-files">${files}</div>` : ''}
-  `;
-  return card;
+// Branch graph row
+function renderGraphRow(c, { isHead = false, isRemoteRef = false, isFirst = false, isLast = false, isNew = false, isRemoteZone = false } = {}) {
+  const row = document.createElement('div');
+  row.className = 'graph-row' + (isRemoteZone ? ' remote-row' : '');
+
+  let nodeClass = 'graph-node';
+  if (isHead && isRemoteRef) nodeClass += ' node-remote-track'; // both → green-ish
+  else if (isHead) nodeClass += ' node-head';
+  else if (isRemoteRef) nodeClass += ' node-remote-track';
+  else if (isRemoteZone) nodeClass += ' node-origin';
+  if (isNew) nodeClass += ' new-node';
+
+  const refs = [];
+  if (isHead)      refs.push(`<span class="ref-badge ref-head">HEAD → ${esc(W.branch)}</span>`);
+  if (isRemoteRef) refs.push(`<span class="ref-badge ref-remote">origin/${esc(W.branch)}</span>`);
+  if (isRemoteZone && isFirst) refs.push(`<span class="ref-badge ref-local">${esc(W.branch)}</span>`);
+
+  const filesStr = c.files && c.files.length ? `<div class="graph-files">${c.files.length}ファイル</div>` : '';
+
+  row.innerHTML = `
+    <div class="graph-rail"><div class="${nodeClass}"></div></div>
+    <div class="graph-info">
+      ${refs.length ? `<div class="graph-refs">${refs.join('')}</div>` : ''}
+      <div class="graph-hash">${esc(c.hash)}</div>
+      <div class="graph-msg">${esc(c.msg)}</div>
+      ${filesStr}
+    </div>`;
+  return row;
 }
 
-function render(highlight) {
+function render(hl = {}) {
   // WD
   const wdBody = document.getElementById('wd-body');
   document.getElementById('wd-empty').style.display = S.wd.length ? 'none' : '';
-  Array.from(wdBody.querySelectorAll('.file-card')).forEach(el => el.remove());
-  S.wd.forEach(f => {
-    const isNew = highlight && highlight.wd && highlight.wd.includes(f.name);
-    wdBody.appendChild(renderFileCard(f, isNew));
-  });
+  wdBody.querySelectorAll('.file-card').forEach(e => e.remove());
+  S.wd.forEach(f => wdBody.appendChild(renderFileCard(f, hl.wd && hl.wd.includes(f.name))));
 
   // SA
   const saBody = document.getElementById('sa-body');
   document.getElementById('sa-empty').style.display = S.sa.length ? 'none' : '';
-  Array.from(saBody.querySelectorAll('.file-card')).forEach(el => el.remove());
-  S.sa.forEach(f => {
-    const isNew = highlight && highlight.sa && highlight.sa.includes(f.name);
-    saBody.appendChild(renderFileCard(f, isNew));
-  });
+  saBody.querySelectorAll('.file-card').forEach(e => e.remove());
+  S.sa.forEach(f => saBody.appendChild(renderFileCard(f, hl.sa && hl.sa.includes(f.name))));
 
-  // LR
-  const lrBody = document.getElementById('lr-body');
+  // LR graph (newest first)
+  const lrGraph = document.getElementById('lr-graph');
   document.getElementById('lr-empty').style.display = S.lr.length ? 'none' : '';
-  Array.from(lrBody.querySelectorAll('.commit-card')).forEach(el => el.remove());
-  [...S.lr].reverse().forEach((c, i) => {
-    const isNew = highlight && highlight.lr && i === 0;
-    lrBody.appendChild(renderCommitCard(c, isNew));
+  lrGraph.innerHTML = '';
+  const lrList = [...S.lr].reverse();
+  lrList.forEach((c, i) => {
+    const isHead      = i === 0;
+    const isRemoteRef = W.remoteTrackHash && c.hash === W.remoteTrackHash;
+    lrGraph.appendChild(renderGraphRow(c, {
+      isHead, isRemoteRef,
+      isFirst: i === 0, isLast: i === lrList.length - 1,
+      isNew: hl.lr && i === 0,
+    }));
   });
 
-  // RR
-  const rrBody = document.getElementById('rr-body');
+  // RR graph
+  const rrGraph = document.getElementById('rr-graph');
   document.getElementById('rr-empty').style.display = S.rr.length ? 'none' : '';
-  Array.from(rrBody.querySelectorAll('.commit-card')).forEach(el => el.remove());
-  [...S.rr].reverse().forEach((c, i) => {
-    const isNew = highlight && highlight.rr && i === 0;
-    rrBody.appendChild(renderCommitCard(c, isNew));
+  rrGraph.innerHTML = '';
+  const rrList = [...S.rr].reverse();
+  rrList.forEach((c, i) => {
+    rrGraph.appendChild(renderGraphRow(c, {
+      isFirst: i === 0, isLast: i === rrList.length - 1,
+      isNew: hl.rr && i === 0,
+      isRemoteZone: true,
+    }));
   });
 }
 
@@ -567,112 +585,82 @@ function esc(s) {
 //  FILE SYSTEM ACCESS API
 // ═══════════════════════════════════════════════════════════════
 async function openFolder() {
-  if (!W.supported) {
-    termPrint('error', 'このブラウザはFile System Access APIに対応していません。');
-    termPrint('info', 'デモモードで操作してください。');
-    return;
-  }
+  if (!W.supported) { termPrint('error','File System Access API非対応。デモモードをお使いください。'); return; }
   try {
-    const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
-    await connectFolder(dirHandle);
+    const dir = await window.showDirectoryPicker({ mode: 'read' });
+    await connectFolder(dir);
   } catch (e) {
-    if (e.name !== 'AbortError') {
-      termPrint('error', 'フォルダのオープンに失敗しました: ' + e.message);
-    }
+    if (e.name !== 'AbortError') termPrint('error','フォルダオープン失敗: ' + e.message);
   }
 }
 
 async function connectFolder(dirHandle) {
-  // Stop existing watcher
   if (W.interval) { clearInterval(W.interval); W.interval = null; }
-
   W.rootHandle = dirHandle;
   W.folderName = dirHandle.name;
 
-  // Try to get .git handle
-  try {
-    W.gitHandle = await dirHandle.getDirectoryHandle('.git');
-  } catch {
-    W.gitHandle = null;
-    termPrint('output', '.git ディレクトリが見つかりません。Gitリポジトリ以外のフォルダです。');
-  }
+  try { W.gitHandle = await dirHandle.getDirectoryHandle('.git'); }
+  catch { W.gitHandle = null; termPrint('output','.git なし — Gitリポジトリ以外のフォルダです。'); }
 
-  // Baseline file scan (establish baseline WITHOUT marking as changed)
-  W.prevFiles.clear();
-  W.stagedFiles.clear();
-  W.prevIndexEntries.clear();
+  W.prevFiles.clear(); W.stagedFiles.clear(); W.prevIndexEntries.clear();
   S.wd = []; S.sa = [];
 
   for await (const [name, handle] of dirHandle.entries()) {
     if (shouldSkip(name)) continue;
     if (handle.kind === 'file') {
-      try {
-        const f = await handle.getFile();
-        W.prevFiles.set(name, { lm: f.lastModified, size: f.size });
-        // Show tracked files (those in git) as clean
-        S.wd.push({ name, icon: getFileIcon(name), type: 'file', status: 'clean' });
-      } catch {}
+      try { const f = await handle.getFile(); W.prevFiles.set(name, { lm: f.lastModified, size: f.size }); } catch {}
     }
   }
 
-  // Read git state
   if (W.gitHandle) {
-    // Detect branch
     try { W.branch = await readBranch(); } catch {}
-
-    // Baseline index (so next poll only diffs against this)
     try { W.prevIndexEntries = await parseCurrentIndex(); } catch {}
-
-    // Current commit hash baseline
     try { W.prevCommitHash = await getCurrentCommitHash(); } catch {}
     try { W.prevRemoteHash = await getRemoteHash(); } catch {}
-
-    // Load commit history into LR zone
     try { S.lr = await readGitLog(); } catch {}
     try { S.rr = await readRemoteCommits(); } catch {}
-
-    // Remove clean files that are actually tracked (not dirty)
-    // Keep WD only if untracked or modified vs HEAD
-    // For now show all as tracked/clean except truly untracked
+    // Set remote tracking hash from most recent remote commit that matches a local commit
+    if (S.rr.length > 0) {
+      const topRemote = S.rr[S.rr.length - 1];
+      const match = S.lr.find(c => c.hash === topRemote.hash);
+      W.remoteTrackHash = match ? match.hash : topRemote.hash;
+    }
+    // Show untracked files (those NOT in index)
     const indexNames = new Set(W.prevIndexEntries.keys());
-    // Files not in index are untracked
-    S.wd = S.wd.map(f => ({
-      ...f,
-      status: indexNames.has(f.name) ? 'clean' : 'untracked'
-    })).filter(f => f.status !== 'clean'); // only show dirty/untracked
+    for (const [name] of W.prevFiles) {
+      if (!indexNames.has(name)) {
+        S.wd.push({ name, icon: getFileIcon(name), status: 'untracked' });
+      }
+    }
   }
 
-  // UI updates
-  document.getElementById('btnOpenFolder').classList.add('connected');
-  document.getElementById('btnOpenFolder').innerHTML = `<span>✅</span> ${esc(W.folderName)}`;
-  const fnEl = document.getElementById('folderName');
-  fnEl.textContent = W.folderName;
-  fnEl.classList.remove('hidden');
-
-  document.getElementById('watchIndicator').style.display = 'flex';
+  // UI
+  const btn = document.getElementById('btnOpenFolder');
+  btn.classList.add('connected');
+  btn.innerHTML = `<span>✅</span> ${esc(W.folderName)}`;
+  document.getElementById('folderName').textContent = W.folderName;
+  document.getElementById('folderName').classList.remove('hidden');
+  const wi = document.getElementById('watchIndicator');
+  wi.style.display = 'flex';
   document.getElementById('termMode').textContent = 'ライブ監視';
   document.getElementById('termMode').classList.add('live');
   document.getElementById('termPs1').textContent = `${W.folderName} $ `;
   document.getElementById('sbWatchDot').style.background = 'var(--success)';
   document.getElementById('sbWatchLabel').textContent = `監視中: ${W.folderName}`;
-  document.getElementById('sbBranch').style.display = '';
+  document.getElementById('sbBranch').classList.remove('hidden');
   document.getElementById('sbBranchName').textContent = W.branch;
-  document.getElementById('sbPollRate').style.display = '';
+  document.getElementById('sbPollRate').classList.remove('hidden');
 
   termPrint('info', `📁 フォルダ接続: ${W.folderName}`);
-  if (W.gitHandle) {
-    termPrint('info', `🌿 ブランチ: ${W.branch} / コミット: ${S.lr.length}件`);
-    termPrint('output', 'VS Code / Cursor でファイルを編集すると自動で反映されます。');
-  }
+  if (W.gitHandle) termPrint('info', `🌿 ${W.branch} / コミット: ${S.lr.length}件 / リモート: ${S.rr.length}件`);
+  termPrint('output', 'VS Code / Cursor でファイルを編集すると自動で反映されます。');
 
   render();
-
-  // Start polling
   W.interval = setInterval(pollAll, 800);
 }
 
-function shouldSkip(name) {
-  return name.startsWith('.') || name === 'node_modules' || name === '__pycache__' || name === 'dist' || name === 'build' || name === '.git';
+function shouldSkip(n) {
+  return n.startsWith('.') || n === 'node_modules' || n === '__pycache__' || n === 'dist' || n === 'build';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -680,9 +668,7 @@ function shouldSkip(name) {
 // ═══════════════════════════════════════════════════════════════
 async function pollAll() {
   try { await pollFiles(); } catch {}
-  if (W.gitHandle) {
-    try { await pollGit(); } catch {}
-  }
+  if (W.gitHandle) { try { await pollGit(); } catch {} }
 }
 
 async function pollFiles() {
@@ -690,57 +676,43 @@ async function pollFiles() {
   for await (const [name, handle] of W.rootHandle.entries()) {
     if (shouldSkip(name)) continue;
     if (handle.kind === 'file') {
-      try {
-        const f = await handle.getFile();
-        cur.set(name, { lm: f.lastModified, size: f.size });
-      } catch {}
+      try { const f = await handle.getFile(); cur.set(name, { lm: f.lastModified, size: f.size }); } catch {}
     }
   }
-
   const prev = W.prevFiles;
   let changed = false;
   const hlWd = [];
 
-  // New or modified files
   for (const [name, info] of cur) {
-    if (W.stagedFiles.has(name)) continue; // in SA already
+    if (W.stagedFiles.has(name)) continue;
     const p = prev.get(name);
     const inWD = S.wd.findIndex(f => f.name === name);
     const inSA = S.sa.findIndex(f => f.name === name);
     const inIndex = W.prevIndexEntries.has(name);
 
     if (!p) {
-      // New file appeared
       if (inWD < 0 && inSA < 0) {
-        S.wd.push({ name, icon: getFileIcon(name), type: 'file', status: 'untracked' });
-        hlWd.push(name);
-        changed = true;
+        S.wd.push({ name, icon: getFileIcon(name), status: 'untracked' });
+        hlWd.push(name); changed = true;
       }
     } else if (info.lm !== p.lm || info.size !== p.size) {
-      // Modified
       if (inWD >= 0) {
-        if (S.wd[inWD].status !== 'modified') {
-          S.wd[inWD].status = 'modified';
-          hlWd.push(name);
-          changed = true;
-        }
+        if (S.wd[inWD].status !== 'modified') { S.wd[inWD].status = 'modified'; hlWd.push(name); changed = true; }
       } else if (inSA < 0) {
-        const status = inIndex ? 'modified' : 'untracked';
-        S.wd.push({ name, icon: getFileIcon(name), type: 'file', status });
-        hlWd.push(name);
-        changed = true;
+        S.wd.push({ name, icon: getFileIcon(name), status: inIndex ? 'modified' : 'untracked' });
+        hlWd.push(name); changed = true;
       }
     }
   }
 
-  // Deleted files
   for (const [name] of prev) {
-    if (!cur.has(name)) {
+    if (!cur.has(name) && !W.stagedFiles.has(name)) {
       const wi = S.wd.findIndex(f => f.name === name);
-      if (wi >= 0 && S.wd[wi].status !== 'deleted') {
-        S.wd[wi].status = 'deleted';
-        hlWd.push(name);
-        changed = true;
+      if (wi >= 0 && S.wd[wi].status !== 'deleted') { S.wd[wi].status = 'deleted'; hlWd.push(name); changed = true; }
+      else if (wi < 0 && !S.sa.find(f => f.name === name)) {
+        // File deleted externally, wasn't shown yet
+        S.wd.push({ name, icon: getFileIcon(name), status: 'deleted' });
+        hlWd.push(name); changed = true;
       }
     }
   }
@@ -750,55 +722,49 @@ async function pollFiles() {
 }
 
 async function pollGit() {
-  // ── Staging: parse .git/index ──
+  // Index (staging)
   try {
-    const idxHandle = await W.gitHandle.getFileHandle('index');
-    const idxFile = await idxHandle.getFile();
-    const buf = await idxFile.arrayBuffer();
-    const newEntries = parseGitIndex(buf);
-    handleIndexChange(newEntries);
+    const fh = await W.gitHandle.getFileHandle('index');
+    const buf = await (await fh.getFile()).arrayBuffer();
+    handleIndexChange(parseGitIndex(buf));
   } catch {}
 
-  // ── Commits: watch HEAD ──
+  // HEAD (commits)
   try {
     const hash = await getCurrentCommitHash();
     if (hash && hash !== W.prevCommitHash) {
       const msg = await readLatestCommitMsg();
       const files = S.sa.map(f => f.name);
-      S.lr.push({ hash: hash.slice(0, 7), msg: msg || 'commit', files });
-      S.sa = [];
-      W.stagedFiles.clear();
+      const short = hash.slice(0, 7);
+      S.lr.push({ hash: short, msg: msg || 'commit', files });
+      S.sa = []; W.stagedFiles.clear();
       W.prevIndexEntries = await parseCurrentIndex();
       W.prevCommitHash = hash;
-      termPrint('info', `✅ コミット: ${hash.slice(0,7)} "${msg || 'commit'}"`);
+      termPrint('info', `✅ コミット: ${short} "${msg || 'commit'}"`);
       render({ lr: true });
     }
   } catch {}
 
-  // ── Push: watch remote ref ──
+  // Remote ref (push)
   try {
     const rHash = await getRemoteHash();
     if (rHash && rHash !== W.prevRemoteHash) {
       W.prevRemoteHash = rHash;
-      const prev = S.rr.length;
+      const prevLen = S.rr.length;
       S.rr = await readRemoteCommits();
-      if (S.rr.length > prev) {
-        termPrint('info', `🚀 プッシュ検出: リモートに${S.rr.length - prev}件追加`);
-        render({ rr: true });
-      } else {
-        render();
+      // Update remote tracking: most recent remote commit hash
+      if (S.rr.length > 0) {
+        W.remoteTrackHash = S.rr[S.rr.length - 1].hash;
       }
+      if (S.rr.length > prevLen) termPrint('info', `🚀 プッシュ検出: +${S.rr.length - prevLen}件`);
+      render({ rr: S.rr.length > prevLen });
     }
   } catch {}
 
-  // ── Branch change ──
+  // Branch change
   try {
     const b = await readBranch();
-    if (b !== W.branch) {
-      W.branch = b;
-      document.getElementById('sbBranchName').textContent = b;
-      termPrint('info', `🌿 ブランチ変更: ${b}`);
-    }
+    if (b !== W.branch) { W.branch = b; document.getElementById('sbBranchName').textContent = b; termPrint('info',`🌿 ブランチ: ${b}`); render(); }
   } catch {}
 }
 
@@ -815,35 +781,30 @@ function handleIndexChange(newEntries) {
     if (prevSha === undefined || sha !== prevSha) {
       const wi = S.wd.findIndex(f => f.name === name);
       const icon = wi >= 0 ? S.wd[wi].icon : getFileIcon(name);
-      const wdSt = wi >= 0 ? S.wd[wi].status : 'modified';
+      const origStatus = wi >= 0 ? S.wd[wi].status : (prevSha === undefined ? 'untracked' : 'modified');
       if (wi >= 0) S.wd.splice(wi, 1);
       if (!S.sa.find(f => f.name === name)) {
-        const saStatus = wdSt === 'deleted' ? 'staged-del' : 'staged';
-        S.sa.push({ name, icon, type: 'file', status: saStatus });
+        const saStatus = origStatus === 'deleted' ? 'staged-del' : 'staged';
+        S.sa.push({ name, icon, status: saStatus, origStatus }); // ← origStatus stored
         W.stagedFiles.add(name);
-        hlSa.push(name);
-        changed = true;
-        if (prevSha === undefined) {
-          termPrint('output', `+ git add ${name} (new file)`);
-        } else {
-          termPrint('output', `+ git add ${name}`);
-        }
+        hlSa.push(name); changed = true;
+        termPrint('output', `+ staged: ${name}${prevSha === undefined ? ' (new)' : ''}`);
       }
     }
   }
 
-  // Un-staged
+  // Un-staged (removed from index)
   for (const [name] of W.prevIndexEntries) {
     if (!newEntries.has(name)) {
       const si = S.sa.findIndex(f => f.name === name);
       if (si >= 0) {
         const f = S.sa.splice(si, 1)[0];
         W.stagedFiles.delete(name);
-        if (W.prevFiles.has(name)) {
-          S.wd.push({ name, icon: f.icon, type: 'file', status: 'modified' });
-        }
+        // ── FIX 1 & 2: restore original status, including untracked and deleted ──
+        const restoreStatus = f.origStatus || (f.status === 'staged-del' ? 'deleted' : 'untracked');
+        S.wd.push({ name, icon: f.icon, status: restoreStatus });
         changed = true;
-        termPrint('output', `- git restore --staged ${name}`);
+        termPrint('output', `- unstaged: ${name}`);
       }
     }
   }
@@ -859,41 +820,31 @@ function parseGitIndex(buffer) {
   const view = new DataView(buffer);
   const bytes = new Uint8Array(buffer);
   const dec = new TextDecoder();
-  const magic = dec.decode(bytes.slice(0, 4));
-  if (magic !== 'DIRC') return new Map();
-
+  if (dec.decode(bytes.slice(0, 4)) !== 'DIRC') return new Map();
   const version = view.getUint32(4, false);
-  const count = view.getUint32(8, false);
+  const count   = view.getUint32(8, false);
   const entries = new Map();
   let off = 12;
-
   for (let i = 0; i < count && off + 62 < buffer.byteLength; i++) {
-    const entryStart = off;
-    off += 40; // ctime(8) + mtime(8) + dev(4) + ino(4) + mode(4) + uid(4) + gid(4) + size(4) = 40
-    const sha = Array.from(bytes.slice(off, off + 20))
-      .map(b => b.toString(16).padStart(2, '0')).join('');
+    const start = off;
+    off += 40;
+    const sha = Array.from(bytes.slice(off, off + 20)).map(b => b.toString(16).padStart(2,'0')).join('');
     off += 20;
-    const flags = view.getUint16(off, false);
-    off += 2;
+    const flags = view.getUint16(off, false); off += 2;
     const nameLen = flags & 0x0fff;
-    if (version >= 3 && (flags & 0x4000)) off += 2; // extended flags
-
+    if (version >= 3 && (flags & 0x4000)) off += 2;
     let name;
     if (nameLen < 0xfff) {
       name = dec.decode(bytes.slice(off, off + nameLen));
-      off += nameLen + 1; // NUL terminator
+      off += nameLen + 1;
     } else {
       let end = off;
       while (end < bytes.length && bytes[end] !== 0) end++;
       name = dec.decode(bytes.slice(off, end));
       off = end + 1;
     }
-
-    // Pad to 8-byte boundary
-    const entryLen = off - entryStart;
-    const padded = Math.ceil(entryLen / 8) * 8;
-    off = entryStart + padded;
-
+    const entryLen = off - start;
+    off = start + Math.ceil(entryLen / 8) * 8;
     if (name) entries.set(name, sha);
   }
   return entries;
@@ -904,39 +855,29 @@ function parseGitIndex(buffer) {
 // ═══════════════════════════════════════════════════════════════
 async function readTextFile(handle, ...path) {
   let cur = handle;
-  for (let i = 0; i < path.length - 1; i++) {
-    cur = await cur.getDirectoryHandle(path[i]);
-  }
-  const fh = await cur.getFileHandle(path[path.length - 1]);
-  const f = await fh.getFile();
+  for (let i = 0; i < path.length - 1; i++) cur = await cur.getDirectoryHandle(path[i]);
+  const f = await (await cur.getFileHandle(path[path.length - 1])).getFile();
   return (await f.text()).trim();
 }
 
 async function readBranch() {
-  const head = await readTextFile(W.gitHandle, 'HEAD');
-  if (head.startsWith('ref: refs/heads/')) {
-    return head.replace('ref: refs/heads/', '').trim();
-  }
-  return head.slice(0, 7); // detached HEAD
+  const h = await readTextFile(W.gitHandle, 'HEAD');
+  return h.startsWith('ref: refs/heads/') ? h.replace('ref: refs/heads/','').trim() : h.slice(0,7);
 }
 
 async function getCurrentCommitHash() {
   const head = await readTextFile(W.gitHandle, 'HEAD');
   if (head.startsWith('ref: ')) {
-    const ref = head.replace('ref: ', '').trim();
+    const ref = head.replace('ref: ','').trim();
     const parts = ref.split('/');
     try {
-      if (parts.length === 3) {
-        return await readTextFile(W.gitHandle, 'refs', parts[1], parts[2]);
-      }
-      return await readTextFile(W.gitHandle, ...parts);
+      return parts.length === 3
+        ? await readTextFile(W.gitHandle, 'refs', parts[1], parts[2])
+        : await readTextFile(W.gitHandle, ...parts);
     } catch {
-      // packed-refs fallback
       try {
         const packed = await readTextFile(W.gitHandle, 'packed-refs');
-        for (const line of packed.split('\n')) {
-          if (line.endsWith(ref)) return line.split(' ')[0];
-        }
+        for (const line of packed.split('\n')) { if (line.endsWith(ref)) return line.split(' ')[0]; }
       } catch {}
       return null;
     }
@@ -945,21 +886,14 @@ async function getCurrentCommitHash() {
 }
 
 async function readLatestCommitMsg() {
-  try {
-    return await readTextFile(W.gitHandle, 'COMMIT_EDITMSG');
-  } catch {
-    return 'commit';
-  }
+  try { return await readTextFile(W.gitHandle, 'COMMIT_EDITMSG'); } catch { return 'commit'; }
 }
 
 async function parseCurrentIndex() {
   try {
-    const fh = await W.gitHandle.getFileHandle('index');
-    const f = await fh.getFile();
+    const f = await (await W.gitHandle.getFileHandle('index')).getFile();
     return parseGitIndex(await f.arrayBuffer());
-  } catch {
-    return new Map();
-  }
+  } catch { return new Map(); }
 }
 
 async function readGitLog() {
@@ -967,13 +901,12 @@ async function readGitLog() {
   try {
     const logsDir = await W.gitHandle.getDirectoryHandle('logs');
     const text = await readTextFile(logsDir, 'HEAD');
+    const skip = /^(checkout:|branch:|clone:|reset:|pull:)/;
     for (const line of text.split('\n').reverse()) {
-      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+ (.+)$/);
-      if (m && m[2] && !m[2].startsWith('checkout:') && !m[2].startsWith('branch:') && !m[2].startsWith('clone:') && !m[2].startsWith('reset:') && !m[2].startsWith('pull:')) {
-        const msg = m[2].replace(/^commit: /, '');
-        if (msg && msg.length > 0) {
-          commits.push({ hash: m[1].slice(0, 7), msg, files: [] });
-        }
+      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+?\d{10} [+-]\d{4}\t(.+)$/);
+      if (m && !skip.test(m[2])) {
+        const msg = m[2].replace(/^commit: /,'');
+        if (msg) commits.push({ hash: m[1].slice(0,7), msg, files: [] });
       }
     }
   } catch {}
@@ -985,9 +918,13 @@ async function getRemoteHash() {
     const refsDir = await W.gitHandle.getDirectoryHandle('refs');
     const remotesDir = await refsDir.getDirectoryHandle('remotes');
     const originDir = await remotesDir.getDirectoryHandle('origin');
-    // Try main then master
-    for (const branch of ['main', 'master', W.branch]) {
-      try { return await readTextFile(originDir, branch); } catch {}
+    for (const b of ['main','master', W.branch]) { try { return await readTextFile(originDir, b); } catch {} }
+  } catch {}
+  // packed-refs fallback
+  try {
+    const packed = await readTextFile(W.gitHandle, 'packed-refs');
+    for (const line of packed.split('\n')) {
+      if (line.includes('refs/remotes/origin/')) return line.split(' ')[0];
     }
   } catch {}
   return null;
@@ -1001,16 +938,11 @@ async function readRemoteCommits() {
     const remotesDir = await refsDir.getDirectoryHandle('remotes');
     const originDir = await remotesDir.getDirectoryHandle('origin');
     let text = '';
-    for (const branch of ['main', 'master', W.branch]) {
-      try { text = await readTextFile(originDir, branch); break; } catch {}
-    }
+    for (const b of ['main','master', W.branch]) { try { text = await readTextFile(originDir, b); break; } catch {} }
     if (!text) return commits;
     for (const line of text.split('\n').reverse()) {
-      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+ (.+)$/);
-      if (m) {
-        const msg = m[2].replace(/^commit: /, '');
-        if (msg) commits.push({ hash: m[1].slice(0, 7), msg, files: [] });
-      }
+      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+?\d{10} [+-]\d{4}\t(.+)$/);
+      if (m) { const msg = m[2].replace(/^commit: /,''); if (msg) commits.push({ hash: m[1].slice(0,7), msg, files: [] }); }
     }
   } catch {}
   return commits;
@@ -1019,126 +951,101 @@ async function readRemoteCommits() {
 // ═══════════════════════════════════════════════════════════════
 //  TERMINAL
 // ═══════════════════════════════════════════════════════════════
-const TERM_HISTORY = [];
-let histIdx = -1;
+const HIST = []; let histIdx = -1;
 
 function termPrint(type, text) {
   const body = document.getElementById('termBody');
-  const line = document.createElement('div');
-  line.className = `term-line ${type}`;
-  line.textContent = text;
-  body.appendChild(line);
-  // Keep last 120 lines
+  const el = document.createElement('div');
+  el.className = `term-line ${type}`; el.textContent = text;
+  body.appendChild(el);
   while (body.children.length > 120) body.removeChild(body.firstChild);
   body.scrollTop = body.scrollHeight;
 }
 
 function onTermKey(e) {
   const inp = document.getElementById('termInput');
-  if (e.key === 'ArrowUp') {
-    if (histIdx < TERM_HISTORY.length - 1) histIdx++;
-    inp.value = TERM_HISTORY[TERM_HISTORY.length - 1 - histIdx] || '';
-    e.preventDefault(); return;
-  }
-  if (e.key === 'ArrowDown') {
-    if (histIdx > 0) histIdx--;
-    inp.value = TERM_HISTORY[TERM_HISTORY.length - 1 - histIdx] || '';
-    e.preventDefault(); return;
-  }
+  if (e.key === 'ArrowUp')   { if (histIdx < HIST.length-1) histIdx++; inp.value = HIST[HIST.length-1-histIdx]||''; e.preventDefault(); return; }
+  if (e.key === 'ArrowDown') { if (histIdx > 0) histIdx--; inp.value = HIST[HIST.length-1-histIdx]||''; e.preventDefault(); return; }
   if (e.key !== 'Enter') return;
-  const cmd = inp.value.trim();
-  if (!cmd) return;
-  TERM_HISTORY.push(cmd); histIdx = -1;
-  inp.value = '';
+  const cmd = inp.value.trim(); if (!cmd) return;
+  HIST.push(cmd); histIdx = -1; inp.value = '';
   termPrint('prompt', `$ ${cmd}`);
   handleTermCmd(cmd);
 }
 
 function handleTermCmd(raw) {
-  // If folder is connected, inform user to use real terminal
   if (W.rootHandle) {
-    termPrint('output', 'ℹ フォルダ接続中 — 実際の端末でコマンドを実行してください。');
-    termPrint('output', 'GitGUIはVS Code/Cursorの変更を自動で検出します。');
+    termPrint('output','ℹ フォルダ接続中 — 実際の端末でコマンドを実行してください。');
+    termPrint('output','GitGUIはVS Code/Cursorの変更を自動で検出します。');
     return;
   }
-
-  // Demo mode
   const parts = raw.trim().split(/\s+/);
-  const cmd = parts[0];
-  const sub = parts[1];
-  const args = parts.slice(2);
-
+  const cmd = parts[0], sub = parts[1];
   if (cmd === 'clear') { document.getElementById('termBody').innerHTML = ''; return; }
   if (cmd !== 'git') { termPrint('error', `command not found: ${cmd}`); return; }
 
   switch (sub) {
     case 'init':
-      termPrint('output', 'Initialized empty Git repository in ./demo/.git/');
-      termPrint('info', '💡 デモモード: フォルダを開くとリアルなGitリポジトリを監視できます');
+      termPrint('output','Initialized empty Git repository in ./demo/.git/');
+      termPrint('info','💡 フォルダを開くとリアルなGitリポジトリを監視できます');
       break;
     case 'add': {
       const target = parts[2];
-      if (!target) { termPrint('error', 'Nothing specified, nothing added.'); break; }
-      const files = target === '.' || target === '-A'
-        ? [...S.wd]
-        : S.wd.filter(f => f.name === target);
-      if (!files.length) { termPrint('output', `Nothing to add.`); break; }
-      files.forEach(f => {
+      if (!target) { termPrint('error','Nothing specified.'); break; }
+      const toAdd = (target === '.' || target === '-A') ? [...S.wd] : S.wd.filter(f => f.name === target);
+      if (!toAdd.length) { termPrint('output','Nothing to add.'); break; }
+      toAdd.forEach(f => {
         const wi = S.wd.findIndex(x => x.name === f.name);
         const icon = wi >= 0 ? S.wd[wi].icon : getFileIcon(f.name);
-        const wdSt = wi >= 0 ? S.wd[wi].status : 'modified';
+        const origStatus = wi >= 0 ? S.wd[wi].status : 'modified';
         if (wi >= 0) S.wd.splice(wi, 1);
         if (!S.sa.find(x => x.name === f.name)) {
-          S.sa.push({ name: f.name, icon, type: 'file', status: wdSt === 'deleted' ? 'staged-del' : 'staged' });
+          S.sa.push({ name: f.name, icon, status: origStatus === 'deleted' ? 'staged-del' : 'staged', origStatus });
         }
         termPrint('output', `  added: ${f.name}`);
       });
-      render({ sa: files.map(f => f.name) });
-      break;
+      render({ sa: toAdd.map(f => f.name) }); break;
     }
     case 'commit': {
-      const mIdx = parts.indexOf('-m');
-      const msg = mIdx >= 0 ? parts.slice(mIdx + 1).join(' ').replace(/^["']|["']$/g, '') : 'commit';
-      if (!S.sa.length) { termPrint('error', 'nothing to commit, working tree clean'); break; }
-      const hash = Math.random().toString(16).slice(2, 9);
+      const mi = parts.indexOf('-m');
+      const msg = mi >= 0 ? parts.slice(mi+1).join(' ').replace(/^["']|["']$/g,'') : 'commit';
+      if (!S.sa.length) { termPrint('error','nothing to commit, working tree clean'); break; }
+      const hash = Math.random().toString(16).slice(2,9);
       S.lr.push({ hash, msg, files: S.sa.map(f => f.name) });
-      S.sa = [];
-      W.stagedFiles.clear();
-      termPrint('output', `[${W.branch || 'main'} ${hash}] ${msg}`);
-      render({ lr: true });
-      break;
+      S.sa = []; W.stagedFiles.clear();
+      termPrint('output', `[${W.branch} ${hash}] ${msg}`);
+      render({ lr: true }); break;
     }
     case 'push': {
-      if (!S.lr.length) { termPrint('error', 'Everything up-to-date'); break; }
       const unpushed = S.lr.filter(c => !S.rr.find(r => r.hash === c.hash));
-      if (!unpushed.length) { termPrint('output', 'Everything up-to-date'); break; }
+      if (!unpushed.length) { termPrint('output','Everything up-to-date'); break; }
       unpushed.forEach(c => S.rr.push({ ...c }));
-      termPrint('output', `To github.com/user/repo.git`);
-      termPrint('output', `   pushed ${unpushed.length} commit(s) → origin/${W.branch || 'main'}`);
-      render({ rr: true });
-      break;
+      // Update remote tracking to HEAD commit
+      W.remoteTrackHash = S.lr.length ? S.lr[S.lr.length-1].hash : null;
+      termPrint('output',`To github.com/user/repo.git`);
+      termPrint('output',`   pushed ${unpushed.length} commit(s) → origin/${W.branch}`);
+      render({ rr: true }); break;
+    }
+    case 'fetch': case 'pull': {
+      termPrint('output','Already up to date.'); break;
     }
     case 'status': {
-      termPrint('output', `On branch ${W.branch || 'main'}`);
-      if (!S.wd.length && !S.sa.length) { termPrint('output', 'nothing to commit, working tree clean'); break; }
-      if (S.sa.length) { termPrint('output', 'Changes to be committed:'); S.sa.forEach(f => termPrint('output', `  ${f.name}`)); }
-      if (S.wd.length) { termPrint('output', 'Changes not staged for commit:'); S.wd.forEach(f => termPrint('output', `  ${f.status}: ${f.name}`)); }
+      termPrint('output',`On branch ${W.branch}`);
+      if (!S.wd.length && !S.sa.length) { termPrint('output','nothing to commit, working tree clean'); break; }
+      if (S.sa.length) { termPrint('output','Changes to be committed:'); S.sa.forEach(f => termPrint('output',`  ${f.name}`)); }
+      if (S.wd.length) { termPrint('output','Changes not staged:'); S.wd.forEach(f => termPrint('output',`  ${f.status}: ${f.name}`)); }
       break;
     }
     case 'log': {
-      if (!S.lr.length) { termPrint('output', 'No commits yet.'); break; }
-      [...S.lr].reverse().forEach(c => termPrint('output', `${c.hash}  ${c.msg}`));
-      break;
+      if (!S.lr.length) { termPrint('output','No commits yet.'); break; }
+      [...S.lr].reverse().forEach(c => termPrint('output', `${c.hash}  ${c.msg}`)); break;
     }
     case 'touch': case 'new': {
-      const fname = parts[2] || `file${S.wd.length + 1}.txt`;
-      if (!S.wd.find(f => f.name === fname) && !S.sa.find(f => f.name === fname)) {
-        S.wd.push({ name: fname, icon: getFileIcon(fname), type: 'file', status: 'untracked' });
-        render({ wd: [fname] });
-        termPrint('output', `Created: ${fname}`);
-      } else {
-        termPrint('output', `Already exists: ${fname}`);
-      }
+      const fname = parts[2] || `file${S.wd.length+1}.txt`;
+      if (!S.wd.find(f=>f.name===fname) && !S.sa.find(f=>f.name===fname)) {
+        S.wd.push({ name: fname, icon: getFileIcon(fname), status: 'untracked' });
+        render({ wd: [fname] }); termPrint('output',`Created: ${fname}`);
+      } else termPrint('output',`Already exists: ${fname}`);
       break;
     }
     case 'restore': {
@@ -1147,39 +1054,40 @@ function handleTermCmd(raw) {
         const si = S.sa.findIndex(f => f.name === fname);
         if (si >= 0) {
           const f = S.sa.splice(si, 1)[0];
-          S.wd.push({ name: f.name, icon: f.icon, type: 'file', status: 'modified' });
-          render();
+          // ── FIX 1 & 2: use origStatus ──
+          const restoreStatus = f.origStatus || (f.status === 'staged-del' ? 'deleted' : 'untracked');
+          S.wd.push({ name: f.name, icon: f.icon, status: restoreStatus });
+          render(); termPrint('output',`Unstaged: ${fname}`);
         }
       } else {
         const fname = parts[2];
-        const wi = S.wd.findIndex(f => f.name === fname);
-        if (wi >= 0) { S.wd.splice(wi, 1); render(); termPrint('output', `Restored: ${fname}`); }
+        const wi = S.wd.findIndex(f=>f.name===fname);
+        if (wi>=0) { S.wd.splice(wi,1); render(); termPrint('output',`Restored: ${fname}`); }
       }
       break;
     }
     case 'reset': {
-      if (parts[2] === 'HEAD' || parts[2] === '--mixed') {
-        S.sa.forEach(f => S.wd.push({ ...f, status: 'modified' }));
-        S.sa = [];
-        render();
-        termPrint('output', 'Unstaged all changes');
+      if (parts[2]==='HEAD' || parts[2]==='--mixed' || !parts[2]) {
+        S.sa.forEach(f => S.wd.push({ name: f.name, icon: f.icon, status: f.origStatus || 'modified' }));
+        S.sa = []; W.stagedFiles.clear(); render(); termPrint('output','Unstaged all changes');
       }
       break;
     }
     case 'checkout': case 'switch': {
-      const branch = parts[2] === '-b' ? parts[3] : parts[2];
-      if (branch) {
-        W.branch = branch;
-        document.getElementById('sbBranchName').textContent = branch;
-        termPrint('output', `Switched to branch '${branch}'`);
-      }
+      const b = parts[2] === '-b' ? parts[3] : parts[2];
+      if (b) { W.branch = b; document.getElementById('sbBranchName').textContent = b; termPrint('output',`Switched to branch '${b}'`); render(); }
+      break;
+    }
+    case 'branch': {
+      if (parts[2]) termPrint('output', `Created branch: ${parts[2]}`);
+      else termPrint('output', `* ${W.branch}`);
       break;
     }
     case 'help': case '--help':
-      termPrint('info', 'デモで使えるコマンド: git add, commit -m, push, status, log, restore, reset HEAD, checkout, touch');
+      termPrint('info','コマンド: git add/commit/push/pull/fetch/status/log/restore/reset/checkout/branch/touch');
       break;
     default:
-      termPrint('output', `git: '${sub}' is not a git command (demo mode)`);
+      termPrint('output',`git: '${sub}' is not a git command (demo mode)`);
   }
 }
 
@@ -1188,18 +1096,15 @@ function handleTermCmd(raw) {
 // ═══════════════════════════════════════════════════════════════
 function onGhToggle(on) {
   GH.enabled = on;
-  const authArea = document.getElementById('ghAuthArea');
+  const a = document.getElementById('ghAuthArea');
   if (on) {
-    authArea.classList.remove('hidden');
-    if (!GH.token) {
-      document.getElementById('btnGhLogin').classList.remove('hidden');
-    } else {
-      showGhUser();
-    }
+    a.classList.remove('hidden');
+    if (!GH.token) document.getElementById('btnGhLogin').classList.remove('hidden');
+    else showGhUser();
     document.getElementById('sbGhDot').style.background = 'var(--accent)';
     document.getElementById('sbGhLabel').textContent = 'GitHub: オン';
   } else {
-    authArea.classList.add('hidden');
+    a.classList.add('hidden');
     document.getElementById('sbGhDot').style.background = '#444';
     document.getElementById('sbGhLabel').textContent = 'GitHub: オフ';
   }
@@ -1211,93 +1116,62 @@ function openGhModal() {
   document.getElementById('modalError').style.display = 'none';
 }
 
-document.getElementById('btnModalCancel').addEventListener('click', () => {
-  document.getElementById('ghModal').classList.add('hidden');
-});
+document.getElementById('btnModalCancel').addEventListener('click', () => document.getElementById('ghModal').classList.add('hidden'));
 
 document.getElementById('btnModalConnect').addEventListener('click', async () => {
   const token = document.getElementById('patInput').value.trim();
   if (!token) { showModalError('トークンを入力してください'); return; }
-  const label = document.getElementById('modalBtnLabel');
-  label.textContent = '認証中...';
-  document.getElementById('btnModalConnect').disabled = true;
+  const lbl = document.getElementById('modalBtnLabel');
+  lbl.textContent = '認証中...'; document.getElementById('btnModalConnect').disabled = true;
   try {
-    const res = await fetch('https://api.github.com/user', {
-      headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    if (!res.ok) throw new Error('認証失敗 (HTTP ' + res.status + ')');
+    const res = await fetch('https://api.github.com/user', { headers: { Authorization: `token ${token}`, Accept: 'application/vnd.github.v3+json' } });
+    if (!res.ok) throw new Error('認証失敗 HTTP ' + res.status);
     const user = await res.json();
-    GH.token = token;
-    GH.user = user;
+    GH.token = token; GH.user = user;
     document.getElementById('ghModal').classList.add('hidden');
-    showGhUser();
-    await loadRepos();
+    showGhUser(); await loadRepos();
     document.getElementById('sbGhDot').style.background = 'var(--success)';
     document.getElementById('sbGhLabel').textContent = `GitHub: ${user.login}`;
-    termPrint('info', `✅ GitHub接続: @${user.login}`);
+    termPrint('info', `✅ GitHub: @${user.login}`);
     document.getElementById('zone-rr').classList.add('gh-connected');
     document.getElementById('remoteBadge').style.display = '';
-  } catch (e) {
-    showModalError(e.message);
-  } finally {
-    label.textContent = '連携する';
-    document.getElementById('btnModalConnect').disabled = false;
-  }
+  } catch (e) { showModalError(e.message); }
+  finally { lbl.textContent = '連携する'; document.getElementById('btnModalConnect').disabled = false; }
 });
 
-function showModalError(msg) {
-  const el = document.getElementById('modalError');
-  el.textContent = msg; el.style.display = '';
-}
+function showModalError(msg) { const e = document.getElementById('modalError'); e.textContent = msg; e.style.display = ''; }
 
 function showGhUser() {
   document.getElementById('btnGhLogin').classList.add('hidden');
   document.getElementById('ghLoading').classList.add('hidden');
-  const panel = document.getElementById('ghUserPanel');
-  panel.classList.remove('hidden');
+  document.getElementById('ghUserPanel').classList.remove('hidden');
   document.getElementById('ghAvatar').src = GH.user.avatar_url;
   document.getElementById('ghUsername').textContent = '@' + GH.user.login;
 }
 
 async function loadRepos() {
   try {
-    const res = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', {
-      headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' }
-    });
-    const repos = await res.json();
-    GH.repos = repos;
+    const res = await fetch('https://api.github.com/user/repos?per_page=100&sort=updated', { headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' } });
+    const repos = await res.json(); GH.repos = repos;
     const sel = document.getElementById('repoSelect');
     sel.innerHTML = '<option value="">リポジトリを選択...</option>';
-    repos.forEach(r => {
-      const opt = document.createElement('option');
-      opt.value = r.full_name;
-      opt.textContent = r.full_name;
-      sel.appendChild(opt);
-    });
+    repos.forEach(r => { const o = document.createElement('option'); o.value = r.full_name; o.textContent = r.full_name; sel.appendChild(o); });
   } catch {}
 }
 
 async function onRepoSelect(fullName) {
   if (!fullName) return;
   GH.activeRepo = fullName;
-  termPrint('info', `📦 リポジトリ選択: ${fullName}`);
-  // Load remote commits into RR
+  termPrint('info', `📦 ${fullName}`);
   try {
-    const res = await fetch(`https://api.github.com/repos/${fullName}/commits?per_page=10`, {
-      headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' }
-    });
+    const res = await fetch(`https://api.github.com/repos/${fullName}/commits?per_page=10`, { headers: { Authorization: `token ${GH.token}`, Accept: 'application/vnd.github.v3+json' } });
     const commits = await res.json();
-    S.rr = commits.map(c => ({
-      hash: c.sha.slice(0, 7),
-      msg: c.commit.message.split('\n')[0],
-      files: []
-    }));
+    S.rr = commits.map(c => ({ hash: c.sha.slice(0,7), msg: c.commit.message.split('\n')[0], files: [] }));
+    if (S.rr.length) W.remoteTrackHash = S.rr[0].hash; // most recent = origin/branch
     render({ rr: true });
     document.getElementById('remoteBadge').style.display = '';
     termPrint('output', `  ${S.rr.length}件のコミットを取得`);
-  } catch (e) {
-    termPrint('error', '取得失敗: ' + e.message);
-  }
+  } catch (e) { termPrint('error','取得失敗: ' + e.message); }
 }
 
 function ghLogout() {
@@ -1308,19 +1182,21 @@ function ghLogout() {
   document.getElementById('remoteBadge').style.display = 'none';
   document.getElementById('sbGhDot').style.background = 'var(--accent)';
   document.getElementById('sbGhLabel').textContent = 'GitHub: オン';
-  termPrint('output', 'GitHubからログアウトしました');
+  termPrint('output','GitHubからログアウトしました');
 }
 
 // ═══════════════════════════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════════════════════════
-termPrint('info', '⚡ GitGUI 起動');
-termPrint('output', '「フォルダを開く」でローカルのGitリポジトリを選択してください。');
-termPrint('output', 'VS Code / Cursor でファイルを編集すると、このパネルに自動反映されます。');
-termPrint('output', 'GitHubと連携するには右上のトグルをオンにしてください。');
+// Fix watchIndicator default display
+document.getElementById('watchIndicator').style.display = 'none';
+
+termPrint('info','⚡ GitGUI 起動');
+termPrint('output','「フォルダを開く」でローカルのGitリポジトリを選択してください。');
+termPrint('output','VS Code / Cursor でファイルを編集すると自動反映されます。');
 if (!W.supported) {
-  termPrint('error', 'このブラウザはFile System Access APIに非対応です。Chromeをご利用ください。');
-  termPrint('info', 'デモモードで利用中 — ターミナルにgitコマンドを入力してください。');
+  termPrint('error','File System Access API非対応。デモモードで利用中。');
+  termPrint('info','ターミナルに git コマンドを入力してください。');
 }
 render();
 </script>
