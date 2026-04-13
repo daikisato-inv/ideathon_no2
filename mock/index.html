@@ -163,10 +163,18 @@
     .fc-badge.staged    { background: rgba(88,166,255,.2);  color: var(--accent); }
     .fc-badge.staged-del{ background: rgba(248,81,73,.15);  color: #f85149; border: 1px solid rgba(248,81,73,.3); }
 
-    /* ── Branch graph ── */
+    /* ── Branch filter select ── */
+    .branch-filter-sel {
+      appearance: none; background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.12);
+      color: var(--text-muted); padding: 2px 6px; border-radius: 4px; font-size: 9px;
+      cursor: pointer; outline: none; max-width: 90px;
+    }
+    .branch-filter-sel:focus { border-color: var(--accent); color: var(--text); }
+    .branch-filter-sel option { background: #161b22; }
+
+    /* ── Remote branch graph (RR zone, vertical) ── */
     .branch-graph { display: flex; flex-direction: column; }
     .graph-row { display: flex; align-items: stretch; position: relative; min-height: 44px; }
-    /* vertical line connecting commits */
     .graph-row:not(:last-child)::after {
       content: ''; position: absolute;
       left: 8px; top: 18px; bottom: 0; width: 2px;
@@ -377,13 +385,20 @@
               <div class="zone-title">ローカルリポジトリ</div>
               <div class="zone-sub">Local Repository</div>
             </div>
+            <div class="zone-header-r">
+              <select class="branch-filter-sel" id="branchFilter" onchange="onBranchFilter(this.value)">
+                <option value="all">すべて</option>
+              </select>
+            </div>
           </div>
-          <div class="zone-body" id="lr-body">
-            <div class="zone-empty" id="lr-empty">
+          <div class="zone-body" id="lr-body" style="overflow:auto;padding:0;flex-direction:row;">
+            <div class="zone-empty" id="lr-empty" style="padding:16px;min-width:100%;align-self:center;">
               <div class="zone-empty-icon">🗄</div>
               <div class="zone-empty-text">git commit するとここに<br>コミットが積まれます</div>
             </div>
-            <div class="branch-graph" id="lr-graph"></div>
+            <div id="bgWrap" style="flex-shrink:0;padding:4px 2px;display:none;">
+              <svg id="bgSvg" style="display:block;overflow:visible;"></svg>
+            </div>
           </div>
         </div>
 
@@ -476,6 +491,34 @@ const W = {
 
 const GH = { enabled: false, token: null, user: null, repos: [], activeRepo: null };
 
+// ── Branch graph state ──────────────────────────────────────────
+const BG = {
+  branches: [],         // sorted branch names
+  data: new Map(),      // branch → [{hash, msg, timestamp}]
+  headHash: null,       // current HEAD 7-char hash
+  selected: 'all',     // filter selection ('all' or branch name)
+};
+const BG_ORDER  = ['main','master','develop','dev','release','hotfix'];
+const BG_COLORS = { main:'#58a6ff', master:'#58a6ff', develop:'#56d364', dev:'#56d364', release:'#e3b341', hotfix:'#f85149' };
+function bgColor(n) {
+  if (BG_COLORS[n]) return BG_COLORS[n];
+  return /^(feature|feat|bugfix|fix)\//.test(n) ? '#a78bfa' : '#8b949e';
+}
+function bgParent(n) {
+  if (/^(feature|feat|bugfix)\//.test(n)) return 'develop';
+  if (/^(hotfix|fix)\//.test(n) || n === 'hotfix') return 'main';
+  if (/^release\//.test(n) || n === 'release') return 'develop';
+  if (n === 'develop' || n === 'dev') return 'main';
+  return null;
+}
+function bgVisible() {
+  if (BG.selected === 'all') return BG.branches;
+  const vis = new Set([BG.selected]);
+  function kids(p) { for (const b of BG.branches) if (bgParent(b) === p && !vis.has(b)) { vis.add(b); kids(b); } }
+  kids(BG.selected);
+  return BG.branches.filter(b => vis.has(b));
+}
+
 // ═══════════════════════════════════════════════════════════════
 //  COMPAT
 // ═══════════════════════════════════════════════════════════════
@@ -549,20 +592,8 @@ function render(hl = {}) {
   saBody.querySelectorAll('.file-card').forEach(e => e.remove());
   S.sa.forEach(f => saBody.appendChild(renderFileCard(f, hl.sa && hl.sa.includes(f.name))));
 
-  // LR graph (newest first)
-  const lrGraph = document.getElementById('lr-graph');
-  document.getElementById('lr-empty').style.display = S.lr.length ? 'none' : '';
-  lrGraph.innerHTML = '';
-  const lrList = [...S.lr].reverse();
-  lrList.forEach((c, i) => {
-    const isHead      = i === 0;
-    const isRemoteRef = W.remoteTrackHash && c.hash === W.remoteTrackHash;
-    lrGraph.appendChild(renderGraphRow(c, {
-      isHead, isRemoteRef,
-      isFirst: i === 0, isLast: i === lrList.length - 1,
-      isNew: hl.lr && i === 0,
-    }));
-  });
+  // LR graph: delegate to SVG branch graph renderer
+  renderBranchGraph();
 
   // RR graph
   const rrGraph = document.getElementById('rr-graph');
@@ -580,6 +611,249 @@ function render(hl = {}) {
 
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  BRANCH GRAPH (SVG horizontal multi-lane)
+// ═══════════════════════════════════════════════════════════════
+async function readAllBranchData() {
+  const branches = [];
+  try {
+    const headsDir = await (await (await W.gitHandle.getDirectoryHandle('refs')).getDirectoryHandle('heads'));
+    async function walk(dir, pfx = '') {
+      for await (const [n, h] of dir.entries()) {
+        if (h.kind === 'file') branches.push(pfx + n);
+        else if (h.kind === 'directory') await walk(h, pfx + n + '/');
+      }
+    }
+    await walk(headsDir);
+  } catch {}
+  BG.branches = branches.sort((a, b) => {
+    const ai = BG_ORDER.indexOf(a), bi = BG_ORDER.indexOf(b);
+    return (ai >= 0 ? ai : 100) - (bi >= 0 ? bi : 100) || a.localeCompare(b);
+  });
+  BG.data.clear();
+  await Promise.all(BG.branches.map(async b => BG.data.set(b, await readBranchCommits(b))));
+  BG.headHash = S.lr.length ? S.lr[S.lr.length - 1].hash : null;
+  updateBranchFilterSelect();
+  renderBranchGraph();
+}
+
+async function readBranchCommits(branchName) {
+  const commits = [];
+  try {
+    let dir = await (await (await W.gitHandle.getDirectoryHandle('logs'))
+      .getDirectoryHandle('refs')).getDirectoryHandle('heads');
+    const parts = branchName.split('/');
+    for (let i = 0; i < parts.length - 1; i++) dir = await dir.getDirectoryHandle(parts[i]);
+    const text = await readTextFile(dir, parts[parts.length - 1]);
+    const skip = /^(checkout:|branch:|clone:|reset:|pull:)/;
+    for (const line of text.split('\n').reverse()) {
+      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+?(\d{10}) [+-]\d{4}\t(.+)$/);
+      if (m && !skip.test(m[3])) {
+        const msg = m[3].replace(/^commit: /, '');
+        if (msg) commits.push({ hash: m[1].slice(0, 7), msg, timestamp: parseInt(m[2]) });
+      }
+    }
+  } catch {}
+  return commits;
+}
+
+function updateBranchFilterSelect() {
+  const sel = document.getElementById('branchFilter');
+  if (!sel) return;
+  const cur = BG.selected;
+  sel.innerHTML = '<option value="all">すべて</option>';
+  for (const b of BG.branches) {
+    const o = document.createElement('option');
+    o.value = b; o.textContent = b;
+    sel.appendChild(o);
+  }
+  if (cur !== 'all' && BG.branches.includes(cur)) sel.value = cur;
+  else if (BG.selected === 'all') sel.value = 'all';
+}
+
+function onBranchFilter(val) {
+  BG.selected = val;
+  renderBranchGraph();
+}
+
+function renderBranchGraph() {
+  const svgEl = document.getElementById('bgSvg');
+  const wrap  = document.getElementById('bgWrap');
+  const empty = document.getElementById('lr-empty');
+  if (!svgEl) return;
+
+  const ns = 'http://www.w3.org/2000/svg';
+  function mk(tag, attrs = {}) {
+    const el = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+  svgEl.innerHTML = '';
+
+  const visible = bgVisible();
+  // Sort lanes: BG_ORDER first, then alphabetical
+  const laneSorted = [...visible].sort((a, b) => {
+    const ai = BG_ORDER.indexOf(a), bi = BG_ORDER.indexOf(b);
+    return (ai >= 0 ? ai : 100) - (bi >= 0 ? bi : 100) || a.localeCompare(b);
+  });
+  const laneMap = new Map(laneSorted.map((b, i) => [b, i]));
+
+  // Collect all commits across visible branches
+  const allC = new Map(); // hash → {hash,msg,timestamp,branches:Set}
+  for (const branch of visible) {
+    for (const c of (BG.data.get(branch) || [])) {
+      if (!allC.has(c.hash)) allC.set(c.hash, { ...c, branches: new Set() });
+      allC.get(c.hash).branches.add(branch);
+    }
+  }
+
+  const sorted = [...allC.values()].sort((a, b) => a.timestamp - b.timestamp);
+  const N = laneSorted.length, M = sorted.length;
+
+  if (N === 0 || M === 0) {
+    empty.style.display = '';
+    wrap.style.display  = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  wrap.style.display  = '';
+
+  // Layout constants
+  const PAD_L = 6, LABEL_W = 64, PAD_R = 16, PAD_T = 12;
+  const LANE_H = 44, NODE_SPACING = 76, NODE_R = 5;
+  const svgW = PAD_L + LABEL_W + M * NODE_SPACING + PAD_R;
+  const svgH = PAD_T * 2 + N * LANE_H;
+
+  svgEl.setAttribute('width',  svgW);
+  svgEl.setAttribute('height', svgH);
+
+  const commitX = new Map();
+  sorted.forEach((c, i) => commitX.set(c.hash, PAD_L + LABEL_W + i * NODE_SPACING + NODE_SPACING / 2));
+  const laneY = idx => PAD_T + idx * LANE_H + LANE_H / 2;
+
+  // ── 1. Rail lines + branch labels ─────────────────────────
+  for (const [branch, li] of laneMap) {
+    const y     = laneY(li);
+    const color = bgColor(branch);
+    const bxs   = (BG.data.get(branch) || [])
+      .filter(c => commitX.has(c.hash))
+      .map(c => commitX.get(c.hash))
+      .sort((a, b) => a - b);
+    if (bxs.length >= 2) {
+      svgEl.appendChild(mk('line', { x1: bxs[0], y1: y, x2: bxs[bxs.length - 1], y2: y,
+        stroke: color, 'stroke-width': '2', opacity: '0.3' }));
+    }
+    // Label background pill
+    const lblBg = mk('rect', { x: PAD_L, y: y - 8, width: LABEL_W - 6, height: 16,
+      rx: '4', fill: 'rgba(0,0,0,0.35)', stroke: color, 'stroke-width': '0.8', opacity: '0.6' });
+    svgEl.appendChild(lblBg);
+    const lbl = mk('text', { x: PAD_L + (LABEL_W - 6) / 2, y: y + 4,
+      'text-anchor': 'middle', 'font-size': '9', 'font-weight': '700',
+      'font-family': 'Segoe UI,system-ui,sans-serif', fill: color });
+    lbl.textContent = branch.length > 10 ? branch.slice(0, 9) + '…' : branch;
+    svgEl.appendChild(lbl);
+  }
+
+  // ── 2. Fork / merge curves ────────────────────────────────
+  for (const [branch, li] of laneMap) {
+    const parent = bgParent(branch);
+    if (!parent || !laneMap.has(parent)) continue;
+    const pli   = laneMap.get(parent);
+    const color = bgColor(branch);
+    const bCommits = BG.data.get(branch) || [];
+    const pCommits = BG.data.get(parent) || [];
+    const pSet = new Set(pCommits.map(c => c.hash));
+    const bSet = new Set(bCommits.map(c => c.hash));
+
+    // Unique commits in this branch (not in parent)
+    const uniqueB = bCommits.filter(c => !pSet.has(c.hash) && commitX.has(c.hash));
+    if (uniqueB.length === 0) continue;
+
+    // Fork: oldest unique commit in branch
+    const forkC = uniqueB.reduce((a, b) => (a.timestamp < b.timestamp ? a : b));
+    const fx = commitX.get(forkC.hash);
+    const by = laneY(li), py = laneY(pli);
+
+    // Parent commit closest before the fork point
+    const pBefore = pCommits
+      .filter(c => commitX.has(c.hash) && commitX.get(c.hash) <= fx)
+      .sort((a, b) => commitX.get(b.hash) - commitX.get(a.hash))[0];
+    const pfx = pBefore ? commitX.get(pBefore.hash) : Math.max(PAD_L + LABEL_W, fx - NODE_SPACING);
+
+    // Draw fork bezier
+    const cp1x = pfx + (fx - pfx) * 0.6;
+    svgEl.appendChild(mk('path', {
+      d: `M${pfx},${py} C${cp1x},${py} ${fx - 16},${by} ${fx},${by}`,
+      fill: 'none', stroke: color, 'stroke-width': '1.5', opacity: '0.55'
+    }));
+
+    // Merge: parent unique commits that come AFTER all branch unique commits
+    const maxBX = Math.max(...uniqueB.map(c => commitX.get(c.hash)));
+    const pAfter = pCommits
+      .filter(c => !bSet.has(c.hash) && commitX.has(c.hash) && commitX.get(c.hash) > maxBX)
+      .sort((a, b) => commitX.get(a.hash) - commitX.get(b.hash))[0];
+    if (pAfter) {
+      const mx   = commitX.get(pAfter.hash);
+      const newest = uniqueB.reduce((a, b) => (a.timestamp > b.timestamp ? a : b));
+      const bEndX  = commitX.get(newest.hash);
+      const cp2x   = bEndX + (mx - bEndX) * 0.4;
+      svgEl.appendChild(mk('path', {
+        d: `M${bEndX},${by} C${cp2x},${by} ${mx - 16},${py} ${mx},${py}`,
+        fill: 'none', stroke: color, 'stroke-width': '1.5', opacity: '0.4', 'stroke-dasharray': '4,2'
+      }));
+    }
+  }
+
+  // ── 3. Nodes + hash/msg labels ────────────────────────────
+  for (const c of sorted) {
+    const x = commitX.get(c.hash);
+    for (const branch of c.branches) {
+      if (!laneMap.has(branch)) continue;
+      const li    = laneMap.get(branch);
+      const y     = laneY(li);
+      const color = bgColor(branch);
+      const isHead   = c.hash === BG.headHash && branch === W.branch;
+      const isRemote = W.remoteTrackHash && c.hash === W.remoteTrackHash;
+      svgEl.appendChild(mk('circle', {
+        cx: x, cy: y, r: NODE_R,
+        fill: isHead ? '#56d364' : (isRemote ? '#a78bfa' : color),
+        stroke: '#0d1117', 'stroke-width': '1.5'
+      }));
+      if (isHead) {
+        const hl = mk('text', { x, y: y - NODE_R - 2, 'text-anchor': 'middle',
+          'font-size': '7', 'font-weight': '700',
+          'font-family': 'Segoe UI,sans-serif', fill: '#56d364' });
+        hl.textContent = 'HEAD';
+        svgEl.appendChild(hl);
+      }
+      if (isRemote && !isHead) {
+        const rl = mk('text', { x, y: y - NODE_R - 2, 'text-anchor': 'middle',
+          'font-size': '7', 'font-weight': '700',
+          'font-family': 'Segoe UI,sans-serif', fill: '#a78bfa' });
+        rl.textContent = `origin/${esc(W.branch)}`;
+        svgEl.appendChild(rl);
+      }
+    }
+    // Hash + message below the top-most (lowest lane index) branch for this commit
+    const primary = [...c.branches]
+      .filter(b => laneMap.has(b))
+      .sort((a, b) => (laneMap.get(a) || 0) - (laneMap.get(b) || 0))[0];
+    if (primary !== undefined) {
+      const y = laneY(laneMap.get(primary));
+      const ht = mk('text', { x, y: y + NODE_R + 9, 'text-anchor': 'middle',
+        'font-size': '7', 'font-family': 'Courier New,monospace', fill: '#58a6ff', opacity: '0.7' });
+      ht.textContent = c.hash;
+      svgEl.appendChild(ht);
+      const mt = mk('text', { x, y: y + NODE_R + 18, 'text-anchor': 'middle',
+        'font-size': '7', 'font-family': 'Segoe UI,system-ui,sans-serif', fill: '#8b949e' });
+      mt.textContent = c.msg.length > 12 ? c.msg.slice(0, 11) + '…' : c.msg;
+      svgEl.appendChild(mt);
+    }
+  }
+
+  wrap.style.minWidth = svgW + 'px';
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -656,6 +930,9 @@ async function connectFolder(dirHandle) {
   termPrint('info', `📁 フォルダ接続: ${W.folderName}`);
   if (W.gitHandle) termPrint('info', `🌿 ${W.branch} / コミット: ${S.lr.length}件 / リモート: ${S.rr.length}件`);
   termPrint('output', 'VS Code / Cursor でファイルを編集すると自動で反映されます。');
+
+  // Read all branch data and render the multi-lane graph
+  if (W.gitHandle) { try { await readAllBranchData(); } catch {} }
 
   render();
   W.interval = setInterval(pollAll, 800);
@@ -743,6 +1020,19 @@ async function pollGit() {
       W.prevIndexEntries = await parseCurrentIndex();
       W.baselineSha = new Map(W.prevIndexEntries); // コミット後は新しい HEAD をベースラインに
       W.prevCommitHash = hash;
+      // Update branch graph data for current branch
+      BG.headHash = short;
+      const ts = Math.floor(Date.now() / 1000);
+      const existing = BG.data.get(W.branch) || [];
+      BG.data.set(W.branch, [{ hash: short, msg: msg || 'commit', timestamp: ts }, ...existing]);
+      if (!BG.branches.includes(W.branch)) {
+        BG.branches.push(W.branch);
+        BG.branches.sort((a, b) => {
+          const ai = BG_ORDER.indexOf(a), bi = BG_ORDER.indexOf(b);
+          return (ai >= 0 ? ai : 100) - (bi >= 0 ? bi : 100) || a.localeCompare(b);
+        });
+        updateBranchFilterSelect();
+      }
       termPrint('info', `✅ コミット: ${short} "${msg || 'commit'}"`);
       render({ lr: true });
     }
@@ -767,7 +1057,15 @@ async function pollGit() {
   // Branch change
   try {
     const b = await readBranch();
-    if (b !== W.branch) { W.branch = b; document.getElementById('sbBranchName').textContent = b; termPrint('info',`🌿 ブランチ: ${b}`); render(); }
+    if (b !== W.branch) {
+      W.branch = b;
+      document.getElementById('sbBranchName').textContent = b;
+      termPrint('info', `🌿 ブランチ: ${b}`);
+      BG.headHash = S.lr.length ? S.lr[S.lr.length - 1].hash : null;
+      // Re-read all branch data when switching branches
+      try { await readAllBranchData(); } catch {}
+      render();
+    }
   } catch {}
 }
 
