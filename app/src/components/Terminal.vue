@@ -49,10 +49,7 @@ function onKeydown(e: KeyboardEvent): void {
 <template>
   <div class="flex flex-col rounded-lg overflow-hidden border shrink-0" style="border-color: var(--color-border); background: var(--color-surface); height: 140px;">
     <div class="flex items-center gap-1.5 px-3 py-1.5 border-b shrink-0" style="border-color: var(--color-border);">
-      <div class="w-3 h-3 rounded-full bg-red-500"></div>
-      <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
-      <div class="w-3 h-3 rounded-full bg-green-500"></div>
-      <span class="ml-2 text-xs font-medium" style="color: var(--color-text-muted);">Terminal</span>
+      <span class="text-xs font-medium" style="color: var(--color-text-muted);">Terminal</span>
       <span class="ml-auto text-xs" style="color: var(--color-text-muted);">{{ watch.rootHandle ? 'ライブ監視' : '未接続' }}</span>
     </div>
     <div ref="bodyEl" class="flex-1 overflow-y-auto px-3 py-1 font-mono text-xs min-h-0">

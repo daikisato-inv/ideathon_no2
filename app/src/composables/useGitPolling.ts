@@ -61,7 +61,7 @@ async function pollGit(): Promise<void> {
   const { print } = useTerminal()
   const { handleIndexChange } = useGitIndex()
 
-  // Index (staging area)
+  // ── Index (staging area) ─────────────────────────────────────────────────
   try {
     const fh = await watch.gitHandle!.getFileHandle('index')
     const buf = await (await fh.getFile()).arrayBuffer()
@@ -69,40 +69,89 @@ async function pollGit(): Promise<void> {
     watch.prevIndexEntries = parseGitIndex(buf)
   } catch {}
 
-  // HEAD (new commit)
+  // ── HEAD (commit) ────────────────────────────────────────────────────────
+  let commitChanged = false
+  let newCommitShort = ''
+  let newCommitMsg = ''
+  const prevRemoteTrackHash = watch.remoteTrackHash   // RT top before this poll
+
   try {
     const hash = await getCurrentCommitHash()
     if (hash && hash !== watch.prevCommitHash) {
-      const msg = await readLatestCommitMsg()
-      const short = hash.slice(0, 7)
-      git.lr.push({ hash: short, msg: msg || 'commit', files: git.sa.map(f => f.name) })
+      commitChanged = true
+      newCommitShort = hash.slice(0, 7)
+      newCommitMsg = await readLatestCommitMsg() || 'commit'
+      git.lr.push({ hash: newCommitShort, msg: newCommitMsg, files: git.sa.map(f => f.name) })
       git.sa = []; watch.stagedFiles.clear()
       watch.prevIndexEntries = await parseCurrentIndex()
       watch.baselineSha = new Map(watch.prevIndexEntries)
       watch.prevCommitHash = hash
-      print('prompt', `$ git commit -m "${msg || 'commit'}"`)
-      print('info', `  → ステージングエリアのファイルをローカルリポジトリに記録しました (${short})`)
     }
   } catch {}
 
-  // Remote ref (fetch/push → updates Remote Tracking)
+  // ── Remote tracking ref (fetch / push) ──────────────────────────────────
+  let remoteChanged = false
+  let rtGrewBy = 0
+
   try {
     const rHash = await getRemoteHash()
     if (rHash && rHash !== watch.prevRemoteHash) {
+      remoteChanged = true
       watch.prevRemoteHash = rHash
       const prevLen = git.rt.length
       git.rt = await readRemoteCommits()
       if (git.rt.length > 0) watch.remoteTrackHash = git.rt[git.rt.length - 1].hash
-      if (git.rt.length > prevLen) {
-        print('prompt', `$ git push origin ${watch.branch}`)
-        print('info', `  → ローカルのコミットをリモート追跡ブランチへ送信しました (+${git.rt.length - prevLen}件)`)
-      }
+      rtGrewBy = git.rt.length - prevLen
     }
   } catch {}
 
-  // Branch change
+  // ── Branch change (checkout / switch) ───────────────────────────────────
   try {
     const b = await readBranch()
-    if (b !== watch.branch) { watch.branch = b; print('info', `🌿 ブランチ: ${b}`) }
+    if (b !== watch.branch) {
+      watch.branch = b
+      print('prompt', `$ git checkout ${b}`)
+      print('info', `ブランチを ${b} に切り替えました`)
+    }
   } catch {}
+
+  // ── Terminal explanations ────────────────────────────────────────────────
+
+  if (!commitChanged && !remoteChanged) return
+
+  const lrHashes = new Set(git.lr.map(c => c.hash))
+  const rtTop = watch.remoteTrackHash
+
+  // Case: RT and LR both advanced in same poll → git pull (fetch+merge)
+  if (commitChanged && remoteChanged) {
+    print('prompt', `$ git pull origin ${watch.branch}`)
+    print('info', `リモートの変更をローカルリポジトリに取り込みました`)
+    return
+  }
+
+  // Case: only LR advanced
+  if (commitChanged) {
+    const isMerge = /^merge/i.test(newCommitMsg)
+    const isFastForward = prevRemoteTrackHash !== null && newCommitShort === prevRemoteTrackHash
+
+    if (isFastForward || isMerge) {
+      print('prompt', `$ git merge origin/${watch.branch}`)
+      print('info', `リモート追跡ブランチの変更をローカルブランチに統合しました`)
+    } else {
+      print('prompt', `$ git commit -m "${newCommitMsg}"`)
+      print('info', `ステージングエリアのファイルをローカルリポジトリに記録しました (${newCommitShort})`)
+    }
+    return
+  }
+
+  // Case: only RT advanced → fetch or push
+  if (remoteChanged) {
+    if (rtTop && lrHashes.has(rtTop)) {
+      print('prompt', `$ git push origin ${watch.branch}`)
+      print('info', `ローカルリポジトリのコミットをリモートリポジトリに送信しました`)
+    } else {
+      print('prompt', `$ git fetch origin`)
+      print('info', `リモートリポジトリの最新情報をリモート追跡ブランチに取得しました`)
+    }
+  }
 }
