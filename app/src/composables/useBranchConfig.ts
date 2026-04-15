@@ -11,14 +11,12 @@ interface BranchConfig {
 const BRANCH_CONFIG: Record<string, BranchConfig> = {
   main:    { order: 0, color: '#f85149' },
   master:  { order: 0, color: '#f85149' },
-  hotfix:  { order: 1, color: '#e3b341' },
-  release: { order: 2, color: '#3fb950' },
-  develop: { order: 3, color: '#58a6ff' },
-  feature: { order: 4, color: '#a78bfa' },
+  dev:     { order: 1, color: '#58a6ff' },
+  feature: { order: 2, color: '#a78bfa' },
 }
 
 const DEFAULT_COLOR = '#8b949e'
-const DEFAULT_ORDER = 5
+const DEFAULT_ORDER = 3
 
 function stripOriginPrefix(name: string): string {
   return name.startsWith('origin/') ? name.slice(7) : name
