@@ -24,6 +24,24 @@ export async function readTextFile(handle: FileSystemDirectoryHandle, ...path: s
   return (await f.text()).trim()
 }
 
+type FileStats = Map<string, { lm: number; size: number }>
+
+/**
+ * Scan a root directory and collect file stats (lastModified, size).
+ * Skips hidden files, node_modules, and build artifacts.
+ */
+export async function collectRootFileStats(handle: FileSystemDirectoryHandle): Promise<FileStats> {
+  const stats: FileStats = new Map()
+  for await (const [name, h] of (handle as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
+    if (shouldSkip(name) || h.kind !== 'file') continue
+    try {
+      const f = await (h as FileSystemFileHandle).getFile()
+      stats.set(name, { lm: f.lastModified, size: f.size })
+    } catch {}
+  }
+  return stats
+}
+
 export function useFileSystem() {
   const watch = useWatchStore()
   const git = useGitStore()
@@ -52,12 +70,7 @@ export function useFileSystem() {
     watch.prevIndexEntries.clear()
     git.wd = []; git.sa = []
 
-    for await (const [name, handle] of (dirHandle as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
-      if (shouldSkip(name)) continue
-      if (handle.kind === 'file') {
-        try { const f = await (handle as FileSystemFileHandle).getFile(); watch.prevFiles.set(name, { lm: f.lastModified, size: f.size }) } catch {}
-      }
-    }
+    watch.prevFiles = await collectRootFileStats(dirHandle)
 
     if (watch.gitHandle) {
       const { readBranch, parseCurrentIndex, getCurrentCommitHash, getRemoteHash, readGitLog, readRemoteCommits } = await import('./useGitLog')
@@ -67,9 +80,9 @@ export function useFileSystem() {
       try { watch.prevCommitHash = await getCurrentCommitHash() } catch {}
       try { watch.prevRemoteHash = await getRemoteHash() } catch {}
       try { git.lr = await readGitLog() } catch {}
-      try { git.rr = await readRemoteCommits() } catch {}
-      if (git.rr.length > 0) {
-        const topRemote = git.rr[git.rr.length - 1]
+      try { git.rt = await readRemoteCommits() } catch {}
+      if (git.rt.length > 0) {
+        const topRemote = git.rt[git.rt.length - 1]
         const match = git.lr.find(c => c.hash === topRemote.hash)
         watch.remoteTrackHash = match ? match.hash : topRemote.hash
       }
@@ -80,7 +93,7 @@ export function useFileSystem() {
     }
 
     print('info', `📁 フォルダ接続: ${watch.folderName}`)
-    if (watch.gitHandle) print('info', `🌿 ${watch.branch} / コミット: ${git.lr.length}件 / リモート: ${git.rr.length}件`)
+    if (watch.gitHandle) print('info', `🌿 ${watch.branch} / コミット: ${git.lr.length}件 / リモート追跡: ${git.rt.length}件`)
     print('output', 'VS Code / Cursor でファイルを編集すると自動で反映されます。')
 
     const { pollAll } = await import('./useGitPolling')

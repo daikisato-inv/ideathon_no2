@@ -18,4 +18,4 @@ export interface BranchLogEntry {
   msg: string
 }
 
-export type ZoneType = 'wd' | 'sa' | 'lr' | 'rr'
+export type ZoneType = 'wd' | 'sa' | 'lr' | 'rt' | 'rr'

@@ -6,11 +6,12 @@ export const useGitStore = defineStore('git', () => {
   const wd = ref<FileItem[]>([])
   const sa = ref<FileItem[]>([])
   const lr = ref<CommitEntry[]>([])
-  const rr = ref<CommitEntry[]>([])
+  const rt = ref<CommitEntry[]>([])  // Remote Tracking (origin/* refs stored locally)
+  const rr = ref<CommitEntry[]>([])  // Remote Repo (GitHub API)
 
   function clearAll() {
-    wd.value = []; sa.value = []; lr.value = []; rr.value = []
+    wd.value = []; sa.value = []; lr.value = []; rt.value = []; rr.value = []
   }
 
-  return { wd, sa, lr, rr, clearAll }
+  return { wd, sa, lr, rt, rr, clearAll }
 })

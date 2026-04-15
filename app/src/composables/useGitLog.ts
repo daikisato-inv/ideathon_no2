@@ -4,6 +4,48 @@ import { readTextFile } from './useFileSystem'
 
 function getWatch() { return useWatchStore() }
 
+// ── Shared parsing ────────────────────────────────────────────────────────────
+
+const GIT_LOG_SKIP = ['checkout:', 'clone:', 'reset:', 'branch:', 'pull:']
+
+/**
+ * Parse a single reflog line into a BranchLogEntry.
+ * Returns null for lines that should be skipped (checkouts, resets, etc.).
+ */
+function parseBranchLogLine(line: string): BranchLogEntry | null {
+  const m = line.match(/^([0-9a-f]{40}) ([0-9a-f]{40}) .+?(\d{10}) [+-]\d{4}\t(.+)$/)
+  if (!m) return null
+  const msg = m[4].replace(/^(commit: |merge: |Merge: )/, '')
+  if (GIT_LOG_SKIP.some(p => msg.startsWith(p))) return null
+  return { from: m[1].slice(0, 7), hash: m[2].slice(0, 7), time: +m[3], msg }
+}
+
+/**
+ * Read and parse all log entries from a FileSystemDirectoryHandle directory.
+ * Each file maps to one branch entry in the result.
+ */
+async function readBranchLogsFromDir(
+  dir: FileSystemDirectoryHandle,
+  namePrefix = ''
+): Promise<Map<string, BranchLogEntry[]>> {
+  const result = new Map<string, BranchLogEntry[]>()
+  for await (const [name, handle] of (dir as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
+    if (handle.kind !== 'file') continue
+    try {
+      const text = await (await (handle as FileSystemFileHandle).getFile()).text()
+      const entries = text.split('\n').reduce<BranchLogEntry[]>((acc, line) => {
+        const entry = parseBranchLogLine(line)
+        if (entry) acc.push(entry)
+        return acc
+      }, [])
+      if (entries.length) result.set(namePrefix + name, entries)
+    } catch {}
+  }
+  return result
+}
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
 export async function readBranch(): Promise<string> {
   const watch = getWatch()
   if (!watch.gitHandle) return 'main'
@@ -56,13 +98,9 @@ export async function readGitLog(): Promise<CommitEntry[]> {
   try {
     const logsDir = await watch.gitHandle.getDirectoryHandle('logs')
     const text = await readTextFile(logsDir, 'HEAD')
-    const skip = /^(checkout:|branch:|clone:|reset:|pull:)/
     for (const line of text.split('\n').reverse()) {
-      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+?\d{10} [+-]\d{4}\t(.+)$/)
-      if (m && !skip.test(m[2])) {
-        const msg = m[2].replace(/^commit: /, '')
-        if (msg) commits.push({ hash: m[1].slice(0, 7), msg, files: [] })
-      }
+      const entry = parseBranchLogLine(line)
+      if (entry) commits.push({ hash: entry.hash, msg: entry.msg, files: [] })
     }
   } catch {}
   return commits
@@ -103,37 +141,36 @@ export async function readRemoteCommits(): Promise<CommitEntry[]> {
     }
     if (!text) return commits
     for (const line of text.split('\n').reverse()) {
-      const m = line.match(/^[0-9a-f]+ ([0-9a-f]+) .+?\d{10} [+-]\d{4}\t(.+)$/)
-      if (m) { const msg = m[2].replace(/^commit: /, ''); if (msg) commits.push({ hash: m[1].slice(0, 7), msg, files: [] }) }
+      const entry = parseBranchLogLine(line)
+      if (entry) commits.push({ hash: entry.hash, msg: entry.msg, files: [] })
     }
   } catch {}
   return commits
 }
 
+/** Read all local branch logs from .git/logs/refs/heads/ */
 export async function readAllBranchLogs(): Promise<Map<string, BranchLogEntry[]>> {
   const watch = getWatch()
-  const result = new Map<string, BranchLogEntry[]>()
-  if (!watch.gitHandle) return result
+  if (!watch.gitHandle) return new Map()
   try {
-    const logsDir = await watch.gitHandle.getDirectoryHandle('logs')
-    const refsLogsDir = await logsDir.getDirectoryHandle('refs')
-    const headsLogsDir = await refsLogsDir.getDirectoryHandle('heads')
-    for await (const [name, handle] of (headsLogsDir as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
-      if (handle.kind !== 'file') continue
-      try {
-        const text = await (await (handle as FileSystemFileHandle).getFile()).text()
-        const entries: BranchLogEntry[] = []
-        for (const line of text.split('\n')) {
-          const m = line.match(/^([0-9a-f]{40}) ([0-9a-f]{40}) .+?(\d{10}) [+-]\d{4}\t(.+)$/)
-          if (!m) continue
-          const msg = m[4].replace(/^(commit: |merge: |Merge: )/, '')
-          if (!msg.startsWith('checkout:') && !msg.startsWith('clone:') && !msg.startsWith('reset:') && !msg.startsWith('branch:') && !msg.startsWith('pull:')) {
-            entries.push({ from: m[1].slice(0, 7), hash: m[2].slice(0, 7), time: +m[3], msg })
-          }
-        }
-        if (entries.length) result.set(name, entries)
-      } catch {}
-    }
-  } catch {}
-  return result
+    const headsDir = await watch.gitHandle
+      .getDirectoryHandle('logs')
+      .then(d => d.getDirectoryHandle('refs'))
+      .then(d => d.getDirectoryHandle('heads'))
+    return readBranchLogsFromDir(headsDir)
+  } catch { return new Map() }
+}
+
+/** Read all remote tracking branch logs from .git/logs/refs/remotes/origin/ */
+export async function readAllRemoteBranchLogs(): Promise<Map<string, BranchLogEntry[]>> {
+  const watch = getWatch()
+  if (!watch.gitHandle) return new Map()
+  try {
+    const originDir = await watch.gitHandle
+      .getDirectoryHandle('logs')
+      .then(d => d.getDirectoryHandle('refs'))
+      .then(d => d.getDirectoryHandle('remotes'))
+      .then(d => d.getDirectoryHandle('origin'))
+    return readBranchLogsFromDir(originDir, 'origin/')
+  } catch { return new Map() }
 }

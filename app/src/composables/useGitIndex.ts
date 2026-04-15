@@ -2,6 +2,7 @@ import { useWatchStore } from '../stores/watchStore'
 import { useGitStore } from '../stores/gitStore'
 import { getFileIcon } from './useFileSystem'
 import { useTerminal } from './useTerminal'
+import type { FileItem } from '../types'
 
 export function parseGitIndex(buffer: ArrayBuffer): Map<string, string> {
   const view = new DataView(buffer)
@@ -37,15 +38,22 @@ export function parseGitIndex(buffer: ArrayBuffer): Map<string, string> {
   return entries
 }
 
+/** Build a FileItem with a sensible default icon. */
+function createFileItem(
+  name: string,
+  status: FileItem['status'],
+  icon = getFileIcon(name),
+  origStatus?: string
+): FileItem {
+  return { name, icon, status, origStatus }
+}
+
 export function useGitIndex() {
   const watch = useWatchStore()
   const git = useGitStore()
   const { print } = useTerminal()
 
   function handleIndexChange(newEntries: Map<string, string>): void {
-    let changed = false
-    const hlSa: string[] = []
-
     for (const [name, sha] of newEntries) {
       const prevSha = watch.prevIndexEntries.get(name)
       if (prevSha === undefined || sha !== prevSha) {
@@ -53,22 +61,24 @@ export function useGitIndex() {
         const bSha = watch.baselineSha.get(name)
 
         if (inSA >= 0 && bSha !== undefined && sha === bSha) {
+          // Unstage: SA → WD
           watch.stagedFiles.delete(name)
           const f = git.sa.splice(inSA, 1)[0]
-          git.wd.push({ name, icon: f.icon, status: f.origStatus as 'modified' | 'untracked' | 'deleted' || 'modified' })
-          changed = true
-          print('output', `- unstaged: ${name}`)
+          git.wd.push(createFileItem(name, (f.origStatus as FileItem['status']) || 'modified', f.icon))
+          print('prompt', `$ git restore --staged ${name}`)
+          print('output', `  → ${name} をステージングエリアから作業ディレクトリへ戻しました`)
         } else if (inSA < 0) {
+          // Stage: WD → SA
           const wi = git.wd.findIndex(f => f.name === name)
           const icon = wi >= 0 ? git.wd[wi].icon : getFileIcon(name)
           const origStatus = wi >= 0 ? git.wd[wi].status : (prevSha === undefined ? 'untracked' : 'modified')
           if (wi >= 0) git.wd.splice(wi, 1)
           if (!git.sa.find(f => f.name === name)) {
-            const saStatus = origStatus === 'deleted' ? 'staged-del' : 'staged'
-            git.sa.push({ name, icon, status: saStatus, origStatus })
+            const saStatus: FileItem['status'] = origStatus === 'deleted' ? 'staged-del' : 'staged'
+            git.sa.push(createFileItem(name, saStatus, icon, origStatus))
             watch.stagedFiles.add(name)
-            hlSa.push(name); changed = true
-            print('output', `+ staged: ${name}${prevSha === undefined ? ' (new)' : ''}`)
+            print('prompt', `$ git add ${name}`)
+            print('output', `  → ${name} を作業ディレクトリからステージングエリアへ移動しました`)
           }
         }
       }
@@ -80,18 +90,17 @@ export function useGitIndex() {
         const si = git.sa.findIndex(f => f.name === name)
         if (si >= 0) {
           const f = git.sa.splice(si, 1)[0]
-          const restoreStatus = f.origStatus || (f.status === 'staged-del' ? 'deleted' : 'untracked')
-          git.wd.push({ name, icon: f.icon, status: restoreStatus as 'modified' | 'untracked' | 'deleted' })
+          const restoreStatus = (f.origStatus || (f.status === 'staged-del' ? 'deleted' : 'untracked')) as FileItem['status']
+          git.wd.push(createFileItem(name, restoreStatus, f.icon))
         } else {
-          git.wd.push({ name, icon: getFileIcon(name), status: 'untracked' })
+          git.wd.push(createFileItem(name, 'untracked'))
         }
-        changed = true
-        print('output', `- unstaged: ${name}`)
+        print('prompt', `$ git restore --staged ${name}`)
+        print('output', `  → ${name} をステージングエリアから作業ディレクトリへ戻しました`)
       }
     }
 
     watch.prevIndexEntries = newEntries
-    return changed ? undefined : undefined
   }
 
   return { handleIndexChange }

@@ -2,7 +2,7 @@ import { useWatchStore } from '../stores/watchStore'
 import { useGitStore } from '../stores/gitStore'
 import { useGitIndex, parseGitIndex } from './useGitIndex'
 import { getCurrentCommitHash, readLatestCommitMsg, readBranch, getRemoteHash, readRemoteCommits, parseCurrentIndex } from './useGitLog'
-import { shouldSkip, getFileIcon } from './useFileSystem'
+import { collectRootFileStats, getFileIcon } from './useFileSystem'
 import { useTerminal } from './useTerminal'
 
 export async function pollAll(): Promise<void> {
@@ -16,14 +16,7 @@ async function pollFiles(): Promise<void> {
   const git = useGitStore()
   if (!watch.rootHandle) return
 
-  const cur = new Map<string, { lm: number; size: number }>()
-  for await (const [name, handle] of (watch.rootHandle as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
-    if (shouldSkip(name)) continue
-    if (handle.kind === 'file') {
-      try { const f = await (handle as FileSystemFileHandle).getFile(); cur.set(name, { lm: f.lastModified, size: f.size }) } catch {}
-    }
-  }
-
+  const cur = await collectRootFileStats(watch.rootHandle)
   const prev = watch.prevFiles
   let changed = false
 
@@ -59,7 +52,6 @@ async function pollFiles(): Promise<void> {
     }
   }
 
-  // Update prevFiles in-place (it's reactive)
   watch.prevFiles = cur
 }
 
@@ -69,40 +61,42 @@ async function pollGit(): Promise<void> {
   const { print } = useTerminal()
   const { handleIndexChange } = useGitIndex()
 
-  // Index (staging)
+  // Index (staging area)
   try {
     const fh = await watch.gitHandle!.getFileHandle('index')
     const buf = await (await fh.getFile()).arrayBuffer()
-    const newEntries = parseGitIndex(buf)
-    handleIndexChange(newEntries)
-    watch.prevIndexEntries = newEntries
+    handleIndexChange(parseGitIndex(buf))
+    watch.prevIndexEntries = parseGitIndex(buf)
   } catch {}
 
-  // HEAD (commits)
+  // HEAD (new commit)
   try {
     const hash = await getCurrentCommitHash()
     if (hash && hash !== watch.prevCommitHash) {
       const msg = await readLatestCommitMsg()
-      const files = git.sa.map(f => f.name)
       const short = hash.slice(0, 7)
-      git.lr.push({ hash: short, msg: msg || 'commit', files })
+      git.lr.push({ hash: short, msg: msg || 'commit', files: git.sa.map(f => f.name) })
       git.sa = []; watch.stagedFiles.clear()
       watch.prevIndexEntries = await parseCurrentIndex()
       watch.baselineSha = new Map(watch.prevIndexEntries)
       watch.prevCommitHash = hash
-      print('info', `✅ コミット: ${short} "${msg || 'commit'}"`)
+      print('prompt', `$ git commit -m "${msg || 'commit'}"`)
+      print('info', `  → ステージングエリアのファイルをローカルリポジトリに記録しました (${short})`)
     }
   } catch {}
 
-  // Remote ref (push)
+  // Remote ref (fetch/push → updates Remote Tracking)
   try {
     const rHash = await getRemoteHash()
     if (rHash && rHash !== watch.prevRemoteHash) {
       watch.prevRemoteHash = rHash
-      const prevLen = git.rr.length
-      git.rr = await readRemoteCommits()
-      if (git.rr.length > 0) watch.remoteTrackHash = git.rr[git.rr.length - 1].hash
-      if (git.rr.length > prevLen) print('info', `🚀 プッシュ検出: +${git.rr.length - prevLen}件`)
+      const prevLen = git.rt.length
+      git.rt = await readRemoteCommits()
+      if (git.rt.length > 0) watch.remoteTrackHash = git.rt[git.rt.length - 1].hash
+      if (git.rt.length > prevLen) {
+        print('prompt', `$ git push origin ${watch.branch}`)
+        print('info', `  → ローカルのコミットをリモート追跡ブランチへ送信しました (+${git.rt.length - prevLen}件)`)
+      }
     }
   } catch {}
 
