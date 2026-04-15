@@ -36,8 +36,17 @@ let branchLogInterval: ReturnType<typeof setInterval> | null = null
 
 async function refreshBranchLogs() {
   if (!watch.gitHandle) return
-  localBranchLogs.value = await readAllBranchLogs()
-  remoteBranchLogs.value = await readAllRemoteBranchLogs()
+
+  // Merge into existing map so deleted branches remain visible as history
+  const freshLocal = await readAllBranchLogs()
+  const mergedLocal = new Map(localBranchLogs.value)
+  for (const [branch, entries] of freshLocal) mergedLocal.set(branch, entries)
+  localBranchLogs.value = mergedLocal
+
+  const freshRemote = await readAllRemoteBranchLogs()
+  const mergedRemote = new Map(remoteBranchLogs.value)
+  for (const [branch, entries] of freshRemote) mergedRemote.set(branch, entries)
+  remoteBranchLogs.value = mergedRemote
 }
 
 onMounted(() => {
