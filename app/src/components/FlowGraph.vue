@@ -133,11 +133,12 @@ function drawConnections(
 
     // Branch-off curve from parent branch
     const fc = commits[0]
-    if (fc.from && fc.from !== '0000000' && hashLane.has(fc.from) && hashLane.get(fc.from) !== i) {
+    if (fc.from !== '0000000' && hashLane.has(fc.from) && hashLane.get(fc.from) !== i) {
+      // Local branch: from = previous HEAD = exact branch point
       const fromLane = hashLane.get(fc.from)!
-      const x1 = hashX.get(fc.from)!
+      const x1 = hashX.get(fc.from)
       const y1 = laneY(fromLane)
-      const x2 = hashX.get(fc.hash)!
+      const x2 = hashX.get(fc.hash)
       if (x1 !== undefined && x2 !== undefined) {
         const mx = (x1 + x2) / 2
         svg.appendChild(svgNs('path', {
@@ -145,16 +146,49 @@ function drawConnections(
           fill: 'none', stroke: color, 'stroke-width': 1.5, opacity: 0.7,
         }))
       }
+    } else if (fc.from === '0000000') {
+      // Remote tracking branch: first push has no prior state (from=0000000).
+      // Infer branch point by finding the nearest higher-priority parent branch
+      // and its latest commit at or before the first push time.
+      const myOrder = getBranchOrder(branches[i])
+      let parentIdx = -1, parentOrder = -1
+      for (let j = 0; j < branches.length; j++) {
+        if (j === i) continue
+        const jOrder = getBranchOrder(branches[j])
+        if (jOrder < myOrder && jOrder > parentOrder) { parentIdx = j; parentOrder = jOrder }
+      }
+      if (parentIdx >= 0) {
+        const parentCommits = branchCommits.get(branches[parentIdx])!
+        const parentAtTime = parentCommits.filter(c => c.time <= fc.time).slice(-1)[0]
+        if (parentAtTime) {
+          const x1 = hashX.get(parentAtTime.hash)
+          const x2 = hashX.get(fc.hash)
+          const y1 = laneY(parentIdx)
+          if (x1 !== undefined && x2 !== undefined && x1 !== x2) {
+            const mx = (x1 + x2) / 2
+            svg.appendChild(svgNs('path', {
+              d: `M${x1},${y1} C${mx},${y1} ${mx},${y} ${x2},${y}`,
+              fill: 'none', stroke: color, 'stroke-width': 1.5, opacity: 0.7,
+            }))
+          }
+        }
+      }
     }
 
     // Merge-into curve to target branch
     const lc = commits[commits.length - 1]
+    const shortName = branches[i].replace(/^origin\//, '')
     for (let j = 0; j < branches.length; j++) {
       if (j === i) continue
-      const mc = branchCommits.get(branches[j])!.find(c => c.from === lc.hash)
+      const mc = branchCommits.get(branches[j])!.find(c =>
+        c.time >= lc.time && (
+          c.hash === lc.hash ||                       // fast-forward: same commit hash
+          c.msg.includes(`merge ${shortName}`)        // true merge: reflog message references branch
+        )
+      )
       if (mc) {
-        const x1 = hashX.get(lc.hash)!
-        const x2 = hashX.get(mc.hash)!
+        const x1 = hashX.get(lc.hash)
+        const x2 = hashX.get(mc.hash)
         const y2 = laneY(j)
         if (x1 !== undefined && x2 !== undefined) {
           const mx = (x1 + x2) / 2
