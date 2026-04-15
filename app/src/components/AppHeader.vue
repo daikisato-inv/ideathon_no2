@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useWatchStore } from '../stores/watchStore'
 import { useGithubStore } from '../stores/githubStore'
 import { useGithubApi } from '../composables/useGithubApi'
@@ -13,6 +14,47 @@ const { openFolder } = useFileSystem()
 function onToggleGithub(on: boolean) {
   gh.enabled = on
 }
+
+// ── Repo search combobox ──
+const repoSearch = ref('')
+const dropOpen = ref(false)
+const comboEl = ref<HTMLDivElement>()
+
+const filteredRepos = computed(() => {
+  const q = repoSearch.value.trim().toLowerCase()
+  if (!q) return gh.repos
+  return gh.repos.filter(r => r.full_name.toLowerCase().includes(q))
+})
+
+function selectRepo(fullName: string) {
+  onRepoSelect(fullName)
+  repoSearch.value = fullName
+  dropOpen.value = false
+}
+
+function onInputFocus() {
+  repoSearch.value = ''
+  dropOpen.value = true
+}
+
+function onInputBlur() {
+  // delay to allow click on option to fire first
+  setTimeout(() => {
+    dropOpen.value = false
+    // restore selected name if user blurs without selecting
+    repoSearch.value = gh.activeRepo ?? ''
+  }, 150)
+}
+
+function onClickOutside(e: MouseEvent) {
+  if (comboEl.value && !comboEl.value.contains(e.target as Node)) {
+    dropOpen.value = false
+    repoSearch.value = gh.activeRepo ?? ''
+  }
+}
+
+onMounted(() => document.addEventListener('mousedown', onClickOutside))
+onUnmounted(() => document.removeEventListener('mousedown', onClickOutside))
 </script>
 
 <template>
@@ -55,18 +97,44 @@ function onToggleGithub(on: boolean) {
           <img :src="gh.user.avatar_url" class="w-6 h-6 rounded-full border" style="border-color: #444;" />
           <span class="text-xs font-semibold" style="color: var(--color-text);">@{{ gh.user.login }}</span>
           <div class="w-px h-4" style="background: var(--color-border);"></div>
-          <div class="relative">
-            <select
-              class="appearance-none text-xs px-2 pr-6 py-1 rounded-md outline-none"
-              style="background: #21262d; border: 1px solid #444c56; color: var(--color-text); min-width: 160px;"
-              :value="gh.activeRepo ?? ''"
-              @change="onRepoSelect(($event.target as HTMLSelectElement).value)"
+
+          <!-- Repo search combobox -->
+          <div ref="comboEl" class="relative" style="min-width: 180px;">
+            <input
+              class="w-full text-xs px-2 py-1 rounded-md outline-none"
+              style="background: #21262d; border: 1px solid #444c56; color: var(--color-text);"
+              :placeholder="gh.activeRepo ? gh.activeRepo : 'リポジトリを検索...'"
+              :value="repoSearch"
+              @input="repoSearch = ($event.target as HTMLInputElement).value; dropOpen = true"
+              @focus="onInputFocus"
+              @blur="onInputBlur"
+            />
+            <!-- Dropdown -->
+            <div
+              v-if="dropOpen"
+              class="absolute left-0 right-0 top-full mt-1 rounded-md overflow-y-auto z-50"
+              style="background: #161b22; border: 1px solid #30363d; max-height: 240px; box-shadow: 0 8px 24px rgba(0,0,0,.4);"
             >
-              <option value="">リポジトリを選択...</option>
-              <option v-for="r in gh.repos" :key="r.full_name" :value="r.full_name">{{ r.full_name }}</option>
-            </select>
-            <span class="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] pointer-events-none" style="color: var(--color-text-muted);">▾</span>
+              <div v-if="!filteredRepos.length" class="px-3 py-2 text-xs" style="color: var(--color-text-muted);">
+                一致するリポジトリがありません
+              </div>
+              <button
+                v-for="r in filteredRepos"
+                :key="r.full_name"
+                class="w-full text-left px-3 py-1.5 text-xs transition-colors"
+                :style="r.full_name === gh.activeRepo
+                  ? 'background: #1f6feb22; color: #58a6ff;'
+                  : 'color: var(--color-text);'"
+                style="display: block;"
+                @mousedown.prevent="selectRepo(r.full_name)"
+                @mouseenter="($event.target as HTMLElement).style.background = '#21262d'"
+                @mouseleave="($event.target as HTMLElement).style.background = r.full_name === gh.activeRepo ? '#1f6feb22' : ''"
+              >
+                {{ r.full_name }}
+              </button>
+            </div>
           </div>
+
           <button class="px-2 py-1 rounded-md text-[11px] border transition-colors" style="border-color:#444c56; color: var(--color-text-muted);" @mouseenter="($event.target as HTMLElement).style.cssText='border-color:#f85149;color:#f85149'" @mouseleave="($event.target as HTMLElement).style.cssText='border-color:#444c56;color:#8b949e'" @click="logout">ログアウト</button>
         </div>
       </template>
