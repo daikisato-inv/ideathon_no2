@@ -30,16 +30,20 @@ async function readBranchLogsFromDir(
 ): Promise<Map<string, BranchLogEntry[]>> {
   const result = new Map<string, BranchLogEntry[]>()
   for await (const [name, handle] of (dir as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
-    if (handle.kind !== 'file') continue
-    try {
-      const text = await (await (handle as FileSystemFileHandle).getFile()).text()
-      const entries = text.split('\n').reduce<BranchLogEntry[]>((acc, line) => {
-        const entry = parseBranchLogLine(line)
-        if (entry) acc.push(entry)
-        return acc
-      }, [])
-      if (entries.length) result.set(namePrefix + name, entries)
-    } catch {}
+    if (handle.kind === 'directory') {
+      const sub = await readBranchLogsFromDir(handle as FileSystemDirectoryHandle, namePrefix + name + '/')
+      for (const [k, v] of sub) result.set(k, v)
+    } else {
+      try {
+        const text = await (await (handle as FileSystemFileHandle).getFile()).text()
+        const entries = text.split('\n').reduce<BranchLogEntry[]>((acc, line) => {
+          const entry = parseBranchLogLine(line)
+          if (entry) acc.push(entry)
+          return acc
+        }, [])
+        if (entries.length) result.set(namePrefix + name, entries)
+      } catch {}
+    }
   }
   return result
 }
