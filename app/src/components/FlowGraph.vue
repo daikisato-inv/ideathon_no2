@@ -270,7 +270,7 @@ onMounted(() => renderGraph())
     <div
       v-if="tooltip.visible"
       class="fixed z-[9999] pointer-events-none"
-      :style="{ left: tooltip.x + 12 + 'px', top: tooltip.y - 56 + 'px' }"
+      :style="{ left: tooltip.x + 'px', top: tooltip.y + 14 + 'px', transform: 'translateX(-100%)' }"
     >
       <div
         class="rounded-md px-3 py-2 text-xs shadow-lg max-w-xs"
