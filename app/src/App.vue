@@ -85,6 +85,8 @@ onUnmounted(() => {
             <div class="flex flex-col items-center justify-center px-1 gap-0.5 shrink-0 text-[9px]">
               <span style="color: #ff0000;">git merge</span>
               <span class="text-sm" style="color: #ff0000;">←</span>
+              <span style="color: #F58220;">git pull</span>
+              <span class="text-sm" style="color: #f58220;">←</span>
             </div>
             <GitZone zone-type="rt" :commits="git.rt" :branch-logs="remoteBranchLogs.size ? remoteBranchLogs : undefined" />
           </div>
@@ -93,7 +95,8 @@ onUnmounted(() => {
         <!-- Local ⇄ Remote boundary -->
         <div class="flex flex-col items-center justify-center px-2 gap-1 shrink-0 text-[9px]">
           <!-- git push: LR → RR -->
-          <span style="color: var(--color-text-muted);">git push →</span>
+          <span style="color: var(--color-text-muted);">git push</span>
+          <span class="text-base">→</span>
           <!-- divider -->
           <div class="w-full my-1" style="border-top: 1px solid rgba(255,255,255,.1);"></div>
           <!-- git fetch: RR → RT -->

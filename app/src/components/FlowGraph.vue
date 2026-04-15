@@ -16,6 +16,10 @@ const git = useGitStore()
 
 const GFC = { LANE_H: 34, R: 4, GAP: 72, LABEL_W: 90, PAD_V: 12 }
 
+const tooltip = ref<{ visible: boolean; x: number; y: number; hash: string; msg: string; branch: string }>({
+  visible: false, x: 0, y: 0, hash: '', msg: '', branch: '',
+})
+
 function svgNs(tag: string, attrs: Record<string, string | number>, txt?: string): SVGElement {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag)
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, String(v))
@@ -60,14 +64,16 @@ function buildHashMapping(
   for (const commits of branchCommits.values())
     for (const c of commits) if (!allHashTimes.has(c.hash)) allHashTimes.set(c.hash, c.time)
 
-  const sortedTimes = [...new Set([...allHashTimes.values()])].sort((a, b) => a - b)
-  const minT = sortedTimes[0] ?? 0
-  const maxT = sortedTimes[sortedTimes.length - 1] ?? 1
-  const span = maxT - minT || 1
+  // 時刻順にソートしたインデックスでX位置を均等割り当て（実時刻の偏りによる密集を防ぐ）
+  const sortedHashes = [...allHashTimes.entries()].sort((a, b) => a[1] - b[1])
+  const n = sortedHashes.length
 
   const hashX = new Map<string, number>()
-  for (const [h, t] of allHashTimes)
-    hashX.set(h, GFC.LABEL_W + 16 + ((t - minT) / span) * (contentW - 32))
+  for (let i = 0; i < n; i++) {
+    const [h] = sortedHashes[i]
+    const ratio = n <= 1 ? 0.5 : i / (n - 1)
+    hashX.set(h, GFC.LABEL_W + 16 + ratio * (contentW - 32))
+  }
 
   const hashLane = new Map<string, number>()
   for (let i = 0; i < branches.length; i++)
@@ -181,10 +187,15 @@ function drawNodes(
       if (x === undefined) continue
       const isHead = c.hash === headHash &&
         (branches[i] === watchStore.branch || branches[i] === `origin/${watchStore.branch}`)
-      svg.appendChild(svgNs('circle', {
+      const circle = svgNs('circle', {
         cx: x, cy: y, r: GFC.R,
         fill: isHead ? '#fff' : color, stroke: color, 'stroke-width': 2,
-      }))
+        'data-hash': c.hash,
+        'data-msg': c.msg ?? '',
+        'data-branch': branches[i],
+        style: 'cursor: pointer',
+      })
+      svg.appendChild(circle)
       if (isHead || ci === 0 || ci === commits.length - 1)
         svg.appendChild(svgNs('text', {
           x, y: y - GFC.R - 2, fill: '#8b949e',
@@ -194,13 +205,41 @@ function drawNodes(
   }
 }
 
+/** Attach tooltip event delegation to SVG. */
+function setupTooltipEvents(svg: SVGSVGElement): void {
+  svg.addEventListener('mouseover', (e) => {
+    const target = e.target as SVGElement
+    if (target.tagName !== 'circle') return
+    tooltip.value = {
+      visible: true,
+      x: (e as MouseEvent).clientX,
+      y: (e as MouseEvent).clientY,
+      hash: target.getAttribute('data-hash') ?? '',
+      msg: target.getAttribute('data-msg') ?? '',
+      branch: target.getAttribute('data-branch') ?? '',
+    }
+  })
+  svg.addEventListener('mousemove', (e) => {
+    const target = e.target as SVGElement
+    if (target.tagName === 'circle') {
+      tooltip.value.x = (e as MouseEvent).clientX
+      tooltip.value.y = (e as MouseEvent).clientY
+    }
+  })
+  svg.addEventListener('mouseout', (e) => {
+    const target = e.target as SVGElement
+    if (target.tagName === 'circle') tooltip.value.visible = false
+  })
+}
+
 function renderGraph(): void {
   const svg = svgEl.value
   if (!svg || !props.branchLogs?.size) return
   svg.innerHTML = ''
 
   const { branches, branchCommits } = prepareBranchData(props.branchLogs)
-  const contentW = Math.max(branches.length * GFC.GAP, 260)
+  const totalCommits = new Set([...branchCommits.values()].flatMap(cs => cs.map(c => c.hash))).size
+  const contentW = Math.max(totalCommits * GFC.GAP, branches.length * GFC.GAP, 260)
   const { hashX, hashLane } = buildHashMapping(branches, branchCommits, contentW)
 
   const totalW = GFC.LABEL_W + contentW + 8
@@ -211,6 +250,7 @@ function renderGraph(): void {
   drawLanes(svg, branches, branchCommits, hashX, totalW)
   drawConnections(svg, branches, branchCommits, hashX, hashLane)
   drawNodes(svg, branches, branchCommits, hashX)
+  setupTooltipEvents(svg)
 }
 
 vWatch(() => props.branchLogs, () => renderGraph(), { flush: 'post', deep: false })
@@ -224,4 +264,28 @@ onMounted(() => renderGraph())
     </div>
     <svg v-else ref="svgEl" style="display: block;"></svg>
   </div>
+
+  <!-- Commit tooltip (Teleport to body to avoid overflow clipping) -->
+  <Teleport to="body">
+    <div
+      v-if="tooltip.visible"
+      class="fixed z-[9999] pointer-events-none"
+      :style="{ left: tooltip.x + 12 + 'px', top: tooltip.y - 56 + 'px' }"
+    >
+      <div
+        class="rounded-md px-3 py-2 text-xs shadow-lg max-w-xs"
+        style="background: #1c2333; border: 1px solid #30363d; color: #e6edf3;"
+      >
+        <div class="font-mono text-[10px] mb-1" style="color: #8b949e;">
+          {{ tooltip.hash.slice(0, 7) }}
+          <span class="ml-2" :style="{ color: tooltip.branch.startsWith('origin/') ? '#58a6ff' : '#3fb950' }">
+            {{ tooltip.branch.startsWith('origin/') ? tooltip.branch.slice(7) : tooltip.branch }}
+          </span>
+        </div>
+        <div class="leading-snug break-words" style="max-width: 240px;">
+          {{ tooltip.msg || '(メッセージなし)' }}
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
