@@ -26,6 +26,7 @@ const rrBranchLogs = computed<Map<string, BranchLogEntry[]>>(() => {
   const entries: BranchLogEntry[] = git.rr.map((c, i) => ({
     from: git.rr[i - 1]?.hash ?? '0000000',
     hash: c.hash,
+    fullHash: c.hash,
     time: Date.now() - (git.rr.length - i) * 60000,
     msg: c.msg,
   }))

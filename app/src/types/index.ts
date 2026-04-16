@@ -14,6 +14,7 @@ export interface CommitEntry {
 export interface BranchLogEntry {
   from: string
   hash: string
+  fullHash: string  // 40-char hash for commit object lookup
   time: number
   msg: string
 }

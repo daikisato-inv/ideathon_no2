@@ -14,11 +14,17 @@ const svgEl = ref<SVGSVGElement>()
 const watchStore = useWatchStore()
 const git = useGitStore()
 
-const GFC = { LANE_H: 34, R: 4, GAP: 72, LABEL_W: 90, PAD_V: 12 }
+/** Graph layout constants */
+const GFC = { LANE_H: 44, R: 7, GAP: 88, LABEL_W: 100, PAD_V: 28, TAG_H: 18 }
 
 const tooltip = ref<{ visible: boolean; x: number; y: number; hash: string; msg: string; branch: string }>({
   visible: false, x: 0, y: 0, hash: '', msg: '', branch: '',
 })
+
+/** hash (7-char) → tag name */
+const tagsMap = ref<Map<string, string>>(new Map())
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function svgNs(tag: string, attrs: Record<string, string | number>, txt?: string): SVGElement {
   const el = document.createElementNS('http://www.w3.org/2000/svg', tag)
@@ -28,10 +34,46 @@ function svgNs(tag: string, attrs: Record<string, string | number>, txt?: string
 }
 
 function laneY(i: number): number {
-  return GFC.PAD_V + i * GFC.LANE_H + GFC.LANE_H / 2
+  return GFC.PAD_V + GFC.TAG_H + i * GFC.LANE_H + GFC.LANE_H / 2
 }
 
-/** Sort branch names, deduplicate commits per branch, and sort commits by time. */
+// ── Tag reading ───────────────────────────────────────────────────────────────
+
+async function readTagsFromGit(): Promise<void> {
+  const gitHandle = watchStore.gitHandle
+  if (!gitHandle) return
+  const result = new Map<string, string>()
+
+  // Loose tags: .git/refs/tags/<name>
+  try {
+    const refsDir = await gitHandle.getDirectoryHandle('refs')
+    const tagsDir = await refsDir.getDirectoryHandle('tags')
+    for await (const [name, handle] of (tagsDir as unknown as AsyncIterable<[string, FileSystemHandle]>)) {
+      if (handle.kind !== 'file') continue
+      try {
+        const text = await (await (handle as FileSystemFileHandle).getFile()).text()
+        const hash = text.trim().slice(0, 7)
+        result.set(hash, name)
+      } catch { /* skip */ }
+    }
+  } catch { /* no tags dir */ }
+
+  // Packed refs: .git/packed-refs
+  try {
+    const f = await (await gitHandle.getFileHandle('packed-refs')).getFile()
+    const text = await f.text()
+    for (const line of text.split('\n')) {
+      if (line.startsWith('#') || !line.includes('refs/tags/')) continue
+      const [hash, ref] = line.split(' ')
+      if (hash && ref) result.set(hash.slice(0, 7), ref.replace('refs/tags/', ''))
+    }
+  } catch { /* no packed-refs */ }
+
+  tagsMap.value = result
+}
+
+// ── Data preparation ──────────────────────────────────────────────────────────
+
 function prepareBranchData(logs: Map<string, BranchLogEntry[]>): {
   branches: string[]
   branchCommits: Map<string, BranchLogEntry[]>
@@ -54,7 +96,6 @@ function prepareBranchData(logs: Map<string, BranchLogEntry[]>): {
   return { branches, branchCommits }
 }
 
-/** Build x-position and lane-index maps keyed by commit hash. */
 function buildHashMapping(
   branches: string[],
   branchCommits: Map<string, BranchLogEntry[]>,
@@ -64,7 +105,6 @@ function buildHashMapping(
   for (const commits of branchCommits.values())
     for (const c of commits) if (!allHashTimes.has(c.hash)) allHashTimes.set(c.hash, c.time)
 
-  // 時刻順にソートしたインデックスでX位置を均等割り当て（実時刻の偏りによる密集を防ぐ）
   const sortedHashes = [...allHashTimes.entries()].sort((a, b) => a[1] - b[1])
   const n = sortedHashes.length
 
@@ -72,7 +112,7 @@ function buildHashMapping(
   for (let i = 0; i < n; i++) {
     const [h] = sortedHashes[i]
     const ratio = n <= 1 ? 0.5 : i / (n - 1)
-    hashX.set(h, GFC.LABEL_W + 16 + ratio * (contentW - 32))
+    hashX.set(h, GFC.LABEL_W + 20 + ratio * (contentW - 40))
   }
 
   const hashLane = new Map<string, number>()
@@ -83,7 +123,31 @@ function buildHashMapping(
   return { hashX, hashLane }
 }
 
-/** Draw lane guide lines and branch labels. */
+// ── SVG drawing functions ─────────────────────────────────────────────────────
+
+/**
+ * Add <defs> with a reusable arrowhead marker.
+ * Uses context-stroke so arrows inherit the path's stroke color (Chrome/Edge supported).
+ */
+function drawDefs(svg: SVGSVGElement): void {
+  const defs = svgNs('defs', {})
+  const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker')
+  marker.setAttribute('id', 'arrow')
+  marker.setAttribute('markerWidth', '8')
+  marker.setAttribute('markerHeight', '8')
+  marker.setAttribute('refX', '7')
+  marker.setAttribute('refY', '3')
+  marker.setAttribute('orient', 'auto')
+  marker.setAttribute('markerUnits', 'strokeWidth')
+  const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+  arrowPath.setAttribute('d', 'M0,0 L0,6 L8,3 z')
+  arrowPath.setAttribute('fill', 'context-stroke')
+  marker.appendChild(arrowPath)
+  defs.appendChild(marker)
+  svg.appendChild(defs)
+}
+
+/** Draw lane guide lines, solid segment lines with arrow, and branch labels. */
 function drawLanes(
   svg: SVGSVGElement,
   branches: string[],
@@ -98,26 +162,34 @@ function drawLanes(
     const commits = branchCommits.get(name)!
     if (!commits.length) continue
 
+    // Full-width dashed guide line
     svg.appendChild(svgNs('line', {
       x1: GFC.LABEL_W, y1: y, x2: totalW - 4, y2: y,
-      stroke: color, 'stroke-width': 1, opacity: 0.15, 'stroke-dasharray': '4,3',
+      stroke: color, 'stroke-width': 1, opacity: 0.12, 'stroke-dasharray': '4,3',
     }))
 
     const x0 = hashX.get(commits[0].hash)!
     const xN = hashX.get(commits[commits.length - 1].hash)!
-    if (x0 < xN)
-      svg.appendChild(svgNs('line', { x1: x0, y1: y, x2: xN, y2: y, stroke: color, 'stroke-width': 2 }))
+
+    if (x0 < xN) {
+      // Solid segment line with arrowhead pointing in direction of time
+      svg.appendChild(svgNs('path', {
+        d: `M${x0},${y} L${xN},${y}`,
+        fill: 'none', stroke: color, 'stroke-width': 2,
+        'marker-end': 'url(#arrow)',
+      }))
+    }
 
     const label = name.startsWith('origin/') ? name.slice(7) : name
     svg.appendChild(svgNs('text', {
-      x: GFC.LABEL_W - 5, y: y + 4, fill: color,
+      x: GFC.LABEL_W - 6, y: y + 4, fill: color,
       'font-size': 9, 'font-family': 'Courier New,monospace',
       'text-anchor': 'end', 'font-weight': '700',
     }, label))
   }
 }
 
-/** Draw inter-branch bezier connection curves. */
+/** Draw inter-branch bezier connection curves with arrowheads. */
 function drawConnections(
   svg: SVGSVGElement,
   branches: string[],
@@ -131,10 +203,9 @@ function drawConnections(
     const color = getBranchColor(branches[i])
     const y = laneY(i)
 
-    // Branch-off curve from parent branch
+    // ── Branch-off curve from parent branch ──────────────────────────────────
     const fc = commits[0]
     if (fc.from !== '0000000' && hashLane.has(fc.from) && hashLane.get(fc.from) !== i) {
-      // Local branch: from = previous HEAD = exact branch point
       const fromLane = hashLane.get(fc.from)!
       const x1 = hashX.get(fc.from)
       const y1 = laneY(fromLane)
@@ -143,13 +214,12 @@ function drawConnections(
         const mx = (x1 + x2) / 2
         svg.appendChild(svgNs('path', {
           d: `M${x1},${y1} C${mx},${y1} ${mx},${y} ${x2},${y}`,
-          fill: 'none', stroke: color, 'stroke-width': 1.5, opacity: 0.7,
+          fill: 'none', stroke: color, 'stroke-width': 1.5, opacity: 0.75,
+          'marker-end': 'url(#arrow)',
         }))
       }
     } else if (fc.from === '0000000') {
-      // Remote tracking branch: first push has no prior state (from=0000000).
-      // Infer branch point by finding the nearest higher-priority parent branch
-      // and its latest commit at or before the first push time.
+      // Remote tracking branch: infer parent by nearest higher-priority branch
       const myOrder = getBranchOrder(branches[i])
       let parentIdx = -1, parentOrder = -1
       for (let j = 0; j < branches.length; j++) {
@@ -168,25 +238,28 @@ function drawConnections(
             const mx = (x1 + x2) / 2
             svg.appendChild(svgNs('path', {
               d: `M${x1},${y1} C${mx},${y1} ${mx},${y} ${x2},${y}`,
-              fill: 'none', stroke: color, 'stroke-width': 1.5, opacity: 0.7,
+              fill: 'none', stroke: color, 'stroke-width': 1.5, opacity: 0.75,
+              'marker-end': 'url(#arrow)',
             }))
           }
         }
       }
     }
 
-    // Merge-into curve to target branch
+    // ── Merge-into curve to target branch ────────────────────────────────────
     const lc = commits[commits.length - 1]
     const shortName = branches[i].replace(/^origin\//, '')
     for (let j = 0; j < branches.length; j++) {
       if (j === i) continue
       const mc = branchCommits.get(branches[j])!.find(c =>
         c.time >= lc.time && (
-          c.hash === lc.hash ||                       // fast-forward: same commit hash
-          c.msg.includes(`merge ${shortName}`)        // true merge: reflog message references branch
+          c.hash === lc.hash ||
+          c.msg.toLowerCase().includes(`merge ${shortName.toLowerCase()}`) ||
+          c.msg.toLowerCase().includes(`merge branch '${shortName.toLowerCase()}'`)
         )
       )
       if (mc) {
+        const targetColor = getBranchColor(branches[j])
         const x1 = hashX.get(lc.hash)
         const x2 = hashX.get(mc.hash)
         const y2 = laneY(j)
@@ -194,7 +267,8 @@ function drawConnections(
           const mx = (x1 + x2) / 2
           svg.appendChild(svgNs('path', {
             d: `M${x1},${y} C${mx},${y} ${mx},${y2} ${x2},${y2}`,
-            fill: 'none', stroke: getBranchColor(branches[j]), 'stroke-width': 1.5, opacity: 0.7,
+            fill: 'none', stroke: targetColor, 'stroke-width': 1.5, opacity: 0.75,
+            'marker-end': 'url(#arrow)',
           }))
         }
         break
@@ -203,7 +277,50 @@ function drawConnections(
   }
 }
 
-/** Draw commit circles and short hash labels. */
+/** Draw a tag speech bubble above a commit node. */
+function drawTagBubble(
+  svg: SVGSVGElement,
+  cx: number,
+  cy: number,
+  tagName: string,
+  color: string
+): void {
+  const FONT_SIZE = 9
+  const PAD_X = 5
+  const PAD_Y = 3
+  const textWidth = tagName.length * (FONT_SIZE * 0.62) + PAD_X * 2
+  const textHeight = FONT_SIZE + PAD_Y * 2
+  const bubbleX = cx - textWidth / 2
+  const bubbleY = cy - GFC.R - 6 - textHeight
+  const tailX = cx
+  const tailY1 = bubbleY + textHeight
+  const tailY2 = cy - GFC.R - 2
+
+  // Tail line from bubble bottom to commit top
+  svg.appendChild(svgNs('line', {
+    x1: tailX, y1: tailY1, x2: tailX, y2: tailY2,
+    stroke: color, 'stroke-width': 1, opacity: 0.8,
+  }))
+
+  // Bubble rectangle
+  svg.appendChild(svgNs('rect', {
+    x: bubbleX, y: bubbleY,
+    width: textWidth, height: textHeight,
+    rx: 3, ry: 3,
+    fill: color, opacity: 0.18,
+    stroke: color, 'stroke-width': 1,
+  }))
+
+  // Tag label
+  svg.appendChild(svgNs('text', {
+    x: cx, y: bubbleY + PAD_Y + FONT_SIZE - 1,
+    fill: color,
+    'font-size': FONT_SIZE, 'font-family': 'Courier New,monospace',
+    'text-anchor': 'middle', 'font-weight': '700',
+  }, tagName))
+}
+
+/** Draw commit circles, hash labels, and tag bubbles. */
 function drawNodes(
   svg: SVGSVGElement,
   branches: string[],
@@ -211,30 +328,48 @@ function drawNodes(
   hashX: Map<string, number>
 ): void {
   const headHash = git.lr.length ? git.lr[git.lr.length - 1].hash : null
+  const tags = tagsMap.value
+
   for (let i = 0; i < branches.length; i++) {
     const commits = branchCommits.get(branches[i])!
     const color = getBranchColor(branches[i])
     const y = laneY(i)
+
     for (let ci = 0; ci < commits.length; ci++) {
       const c = commits[ci]
       const x = hashX.get(c.hash)
       if (x === undefined) continue
+
       const isHead = c.hash === headHash &&
         (branches[i] === watchStore.branch || branches[i] === `origin/${watchStore.branch}`)
+
+      // Tag bubble (shown above the node if this commit is tagged)
+      const tagName = tags.get(c.hash)
+      if (tagName) {
+        drawTagBubble(svg, x, y, tagName, color)
+      }
+
+      // Commit circle
       const circle = svgNs('circle', {
         cx: x, cy: y, r: GFC.R,
-        fill: isHead ? '#fff' : color, stroke: color, 'stroke-width': 2,
+        fill: isHead ? '#fff' : color,
+        stroke: color, 'stroke-width': isHead ? 2.5 : 1.5,
         'data-hash': c.hash,
         'data-msg': c.msg ?? '',
         'data-branch': branches[i],
         style: 'cursor: pointer',
       })
       svg.appendChild(circle)
-      if (isHead || ci === 0 || ci === commits.length - 1)
+
+      // Short hash label above node (shown for HEAD, first, or last commit)
+      if (isHead || ci === 0 || ci === commits.length - 1) {
+        // If there's a tag bubble, push the hash label further up
+        const labelY = tagName ? y - GFC.R - (GFC.TAG_H + 10) : y - GFC.R - 3
         svg.appendChild(svgNs('text', {
-          x, y: y - GFC.R - 2, fill: '#8b949e',
+          x, y: labelY, fill: '#8b949e',
           'font-size': 7, 'font-family': 'Courier New,monospace', 'text-anchor': 'middle',
-        }, c.hash))
+        }, c.hash.slice(0, 7)))
+      }
     }
   }
 }
@@ -266,6 +401,8 @@ function setupTooltipEvents(svg: SVGSVGElement): void {
   })
 }
 
+// ── Main render ───────────────────────────────────────────────────────────────
+
 function renderGraph(): void {
   const svg = svgEl.value
   if (!svg || !props.branchLogs?.size) return
@@ -273,22 +410,33 @@ function renderGraph(): void {
 
   const { branches, branchCommits } = prepareBranchData(props.branchLogs)
   const totalCommits = new Set([...branchCommits.values()].flatMap(cs => cs.map(c => c.hash))).size
-  const contentW = Math.max(totalCommits * GFC.GAP, branches.length * GFC.GAP, 260)
+  const contentW = Math.max(totalCommits * GFC.GAP, branches.length * GFC.GAP, 300)
   const { hashX, hashLane } = buildHashMapping(branches, branchCommits, contentW)
 
-  const totalW = GFC.LABEL_W + contentW + 8
-  const totalH = GFC.PAD_V + branches.length * GFC.LANE_H + GFC.PAD_V
+  const totalW = GFC.LABEL_W + contentW + 12
+  // Extra vertical space for tag bubbles at top (PAD_V already includes TAG_H)
+  const totalH = GFC.PAD_V + GFC.TAG_H + branches.length * GFC.LANE_H + GFC.PAD_V
   svg.setAttribute('width', String(totalW))
   svg.setAttribute('height', String(totalH))
 
+  drawDefs(svg)
   drawLanes(svg, branches, branchCommits, hashX, totalW)
   drawConnections(svg, branches, branchCommits, hashX, hashLane)
   drawNodes(svg, branches, branchCommits, hashX)
   setupTooltipEvents(svg)
 }
 
-vWatch(() => props.branchLogs, () => renderGraph(), { flush: 'post', deep: false })
-onMounted(() => renderGraph())
+vWatch(() => props.branchLogs, async () => {
+  await readTagsFromGit()
+  renderGraph()
+}, { flush: 'post', deep: false })
+
+vWatch(tagsMap, () => renderGraph(), { flush: 'post' })
+
+onMounted(async () => {
+  await readTagsFromGit()
+  renderGraph()
+})
 </script>
 
 <template>
