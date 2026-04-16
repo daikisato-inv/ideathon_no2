@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { FileItem, CommitEntry, ZoneType, BranchLogEntry } from '../types'
+import type { FileItem, CommitEntry, ZoneType, BranchLogEntry, DagCommit } from '../types'
 import FileCard from './FileCard.vue'
 import BranchGraph from './BranchGraph.vue'
 import FlowGraph from './FlowGraph.vue'
@@ -12,6 +12,7 @@ const props = defineProps<{
   highlights?: string[]
   isRemote?: boolean
   branchLogs?: Map<string, BranchLogEntry[]>
+  dagCommits?: DagCommit[]
 }>()
 
 const ZONE_CONFIGS: Record<ZoneType, { icon: string; title: string; sub: string; borderColor: string; bgColor: string }> = {
@@ -35,7 +36,7 @@ const isFileZone = computed(() => props.zoneType === 'wd' || props.zoneType === 
 const isCommitZone = computed(() => props.zoneType === 'lr' || props.zoneType === 'rt' || props.zoneType === 'rr')
 
 // lr/rt/rr: branchLogsがあればFlowGraph、なければBranchGraph（コミットのリスト）
-const showFlowGraph = computed(() => isCommitZone.value && !!props.branchLogs)
+const showFlowGraph = computed(() => isCommitZone.value && (!!props.dagCommits?.length || !!props.branchLogs?.size))
 const showBranchGraph = computed(() => isCommitZone.value && !props.branchLogs && !!props.commits?.length)
 const isEmpty = computed(() => {
   if (isFileZone.value) return !props.files?.length
@@ -73,6 +74,7 @@ const isEmpty = computed(() => {
       <FlowGraph
         v-if="showFlowGraph"
         :branch-logs="branchLogs"
+        :dag-commits="dagCommits"
         :empty-text="EMPTY_HINTS[zoneType]"
       />
 

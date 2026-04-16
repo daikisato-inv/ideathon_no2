@@ -3,7 +3,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useGitStore } from './stores/gitStore'
 import { useWatchStore } from './stores/watchStore'
 import { readAllBranchLogs, readAllRemoteBranchLogs } from './composables/useGitLog'
-import type { BranchLogEntry } from './types'
+import { buildDag } from './composables/useGitDag'
+import type { BranchLogEntry, DagCommit } from './types'
 import AppHeader from './components/AppHeader.vue'
 import CompatBanner from './components/CompatBanner.vue'
 import GhModal from './components/GhModal.vue'
@@ -18,6 +19,7 @@ const ghModalVisible = ref(false)
 // Branch logs for each commit zone
 const localBranchLogs = ref<Map<string, BranchLogEntry[]>>(new Map())
 const remoteBranchLogs = ref<Map<string, BranchLogEntry[]>>(new Map())
+const dagCommits = ref<DagCommit[]>([])
 
 // RR: convert git.rr (GitHub API flat list) to a single-branch branchLogs map
 const rrBranchLogs = computed<Map<string, BranchLogEntry[]>>(() => {
@@ -48,6 +50,12 @@ async function refreshBranchLogs() {
   const mergedRemote = new Map(remoteBranchLogs.value)
   for (const [branch, entries] of freshRemote) mergedRemote.set(branch, entries)
   remoteBranchLogs.value = mergedRemote
+
+  try {
+    dagCommits.value = await buildDag(watch.gitHandle)
+  } catch {
+    // DAG build failed silently; keep previous value
+  }
 }
 
 onMounted(() => {
@@ -90,7 +98,7 @@ onUnmounted(() => {
               <span class="text-[10px]">git commit</span>
               <span class="text-base">→</span>
             </div>
-            <GitZone zone-type="lr" :commits="git.lr" :branch-logs="localBranchLogs.size ? localBranchLogs : undefined" />
+            <GitZone zone-type="lr" :commits="git.lr" :branch-logs="localBranchLogs.size ? localBranchLogs : undefined" :dag-commits="dagCommits" />
             <!-- RT → LR: git merge -->
             <div class="flex flex-col items-center justify-center px-1 gap-0.5 shrink-0 text-[9px]">
               <span style="color: #ff0000;">git merge</span>
@@ -98,7 +106,7 @@ onUnmounted(() => {
               <span style="color: #F58220;">git pull</span>
               <span class="text-sm" style="color: #f58220;">←</span>
             </div>
-            <GitZone zone-type="rt" :commits="git.rt" :branch-logs="remoteBranchLogs.size ? remoteBranchLogs : undefined" />
+            <GitZone zone-type="rt" :commits="git.rt" :branch-logs="remoteBranchLogs.size ? remoteBranchLogs : undefined" :dag-commits="dagCommits" />
           </div>
         </div>
 
