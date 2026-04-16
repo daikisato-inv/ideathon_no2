@@ -1,6 +1,5 @@
 import { useWatchStore } from '../stores/watchStore'
 import { useGitStore } from '../stores/gitStore'
-import { useTerminal } from './useTerminal'
 
 export function getFileIcon(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
@@ -45,16 +44,15 @@ export async function collectRootFileStats(handle: FileSystemDirectoryHandle): P
 export function useFileSystem() {
   const watch = useWatchStore()
   const git = useGitStore()
-  const { print } = useTerminal()
 
   async function openFolder(): Promise<void> {
-    if (!watch.supported) { print('error', 'File System Access API非対応。Chrome / Edge をお使いください。'); return }
+    if (!watch.supported) return
     try {
       const dir = await (window as Window & { showDirectoryPicker: (o?: object) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: 'read' })
       await connectFolder(dir)
     } catch (e: unknown) {
       const err = e as { name?: string; message?: string }
-      if (err.name !== 'AbortError') print('error', 'フォルダオープン失敗: ' + (err.message ?? ''))
+      if (err.name !== 'AbortError') return
     }
   }
 
@@ -64,7 +62,7 @@ export function useFileSystem() {
     watch.folderName = dirHandle.name
 
     try { watch.gitHandle = await dirHandle.getDirectoryHandle('.git') }
-    catch { watch.gitHandle = null; print('output', '.git なし — Gitリポジトリ以外のフォルダです。') }
+    catch { watch.gitHandle = null }
 
     watch.prevFiles.clear(); watch.stagedFiles.clear()
     watch.prevIndexEntries.clear()
@@ -91,10 +89,6 @@ export function useFileSystem() {
         if (!indexNames.has(name)) git.wd.push({ name, icon: getFileIcon(name), status: 'untracked' })
       }
     }
-
-    print('info', `📁 フォルダ接続: ${watch.folderName}`)
-    if (watch.gitHandle) print('info', `🌿 ${watch.branch} / コミット: ${git.lr.length}件 / リモート追跡: ${git.rt.length}件`)
-    print('output', 'VS Code / Cursor でファイルを編集すると自動で反映されます。')
 
     const { pollAll } = await import('./useGitPolling')
     watch.interval = setInterval(pollAll, 800)

@@ -1,7 +1,6 @@
 import { useWatchStore } from '../stores/watchStore'
 import { useGitStore } from '../stores/gitStore'
 import { getFileIcon } from './useFileSystem'
-import { useTerminal } from './useTerminal'
 import type { FileItem } from '../types'
 
 export function parseGitIndex(buffer: ArrayBuffer): Map<string, string> {
@@ -51,12 +50,8 @@ function createFileItem(
 export function useGitIndex() {
   const watch = useWatchStore()
   const git = useGitStore()
-  const { print } = useTerminal()
 
   function handleIndexChange(newEntries: Map<string, string>): void {
-    const staged: string[] = []
-    const unstaged: string[] = []
-
     for (const [name, sha] of newEntries) {
       const prevSha = watch.prevIndexEntries.get(name)
       if (prevSha === undefined || sha !== prevSha) {
@@ -68,7 +63,6 @@ export function useGitIndex() {
           watch.stagedFiles.delete(name)
           const f = git.sa.splice(inSA, 1)[0]
           git.wd.push(createFileItem(name, (f.origStatus as FileItem['status']) || 'modified', f.icon))
-          unstaged.push(name)
         } else if (inSA < 0) {
           // Stage: WD → SA
           const wi = git.wd.findIndex(f => f.name === name)
@@ -79,7 +73,6 @@ export function useGitIndex() {
             const saStatus: FileItem['status'] = origStatus === 'deleted' ? 'staged-del' : 'staged'
             git.sa.push(createFileItem(name, saStatus, icon, origStatus))
             watch.stagedFiles.add(name)
-            staged.push(name)
           }
         }
       }
@@ -96,24 +89,10 @@ export function useGitIndex() {
         } else {
           git.wd.push(createFileItem(name, 'untracked'))
         }
-        unstaged.push(name)
       }
     }
 
     watch.prevIndexEntries = newEntries
-
-    // ── Batched terminal output ──────────────────────────────────────────────
-    if (staged.length) {
-      const cmd = staged.length === 1 ? `git add ${staged[0]}` : `git add .`
-      print('prompt', `$ ${cmd}`)
-      print('info', `変更ファイルを作業ディレクトリからステージングエリアに移動しました`)
-    }
-
-    if (unstaged.length) {
-      const cmd = unstaged.length === 1 ? `git restore --staged ${unstaged[0]}` : `git restore --staged .`
-      print('prompt', `$ ${cmd}`)
-      print('info', `ファイルをステージングエリアから作業ディレクトリに戻しました`)
-    }
   }
 
   return { handleIndexChange }

@@ -6,7 +6,7 @@ function getWatch() { return useWatchStore() }
 
 // ── Shared parsing ────────────────────────────────────────────────────────────
 
-const GIT_LOG_SKIP = ['checkout:', 'clone:', 'reset:', 'branch:', 'pull:']
+const GIT_LOG_SKIP = ['checkout:', 'clone:', 'reset:', 'branch:']
 
 /**
  * Parse a single reflog line into a BranchLogEntry.
@@ -84,13 +84,27 @@ async function readBranchLogsFromDir(
           if (entry) acc.push(entry)
           return acc
         }, [])
-        // Resolve from=0000000 (new branch push) to actual parent commit hash
+        // Normalize "from" to the actual commit parent whenever possible.
+        // Reflog "from -> to" is not always parent-child (e.g. force-update or
+        // repeated "update by push"), especially on remote-tracking branches.
         if (gitHandle) {
-          const initial = entries.find(e => e.from === '0000000')
-          if (initial) {
-            const parent = await readCommitParent(gitHandle, initial.fullHash)
-            if (parent) initial.from = parent
+          for (const entry of entries) {
+            const parent = await readCommitParent(gitHandle, entry.fullHash)
+            if (parent) entry.from = parent
           }
+        }
+
+        // Fallback: drop synthetic ref-creation rows that still have unknown parent.
+        // Example: 0000000 -> <hash> "update by push", followed by <hash> -> <next>.
+        // Keeping such a row makes branch start appear disconnected in RT.
+        if (entries.length >= 2) {
+          const first = entries[0]
+          const second = entries[1]
+          const syntheticCreate =
+            first.from === '0000000' &&
+            second.from === first.hash &&
+            (first.msg === 'update by push' || first.msg.startsWith('fetch:'))
+          if (syntheticCreate) entries.shift()
         }
         if (entries.length) result.set(namePrefix + name, entries)
       } catch {}
