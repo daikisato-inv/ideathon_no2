@@ -88,8 +88,47 @@ function renderLaneGraph(svg: SVGSVGElement, rows: LaneRow[]): void {
   svg.setAttribute('width', String(totalW))
   svg.setAttribute('height', String(totalH))
 
+  drawParentLinks(svg, rows)
+
   for (let i = 0; i < rows.length; i++) {
     drawLaneRow(svg, rows[i], i, textX)
+  }
+}
+
+function drawParentLinks(svg: SVGSVGElement, rows: LaneRow[]): void {
+  const { ROW_H, COL_W, R, LEFT } = LC
+  const rowByHash = new Map(rows.map((r, i) => [r.commit.hash, { row: r, idx: i }] as const))
+
+  for (let i = 0; i < rows.length; i++) {
+    const child = rows[i]
+    const x1 = LEFT + child.col * COL_W
+    const y1 = i * ROW_H + ROW_H / 2 + R + 1
+
+    for (const parentHash of child.commit.parents) {
+      const parent = rowByHash.get(parentHash)
+      if (!parent) continue
+
+      const x2 = LEFT + parent.row.col * COL_W
+      const y2 = parent.idx * ROW_H + ROW_H / 2 - R - 1
+
+      if (x1 === x2) {
+        svg.appendChild(svgNs('line', {
+          x1, y1, x2, y2,
+          stroke: child.color,
+          'stroke-width': 1.2,
+          'stroke-opacity': 0.45,
+        }))
+      } else {
+        const my = (y1 + y2) / 2
+        svg.appendChild(svgNs('path', {
+          d: `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`,
+          fill: 'none',
+          stroke: child.color,
+          'stroke-width': 1.2,
+          'stroke-opacity': 0.45,
+        }))
+      }
+    }
   }
 }
 
