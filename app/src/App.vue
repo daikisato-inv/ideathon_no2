@@ -9,7 +9,6 @@ import AppHeader from './components/AppHeader.vue'
 import CompatBanner from './components/CompatBanner.vue'
 import GhModal from './components/GhModal.vue'
 import GitZone from './components/GitZone.vue'
-import Terminal from './components/Terminal.vue'
 import StatusBar from './components/StatusBar.vue'
 
 const git = useGitStore()
@@ -134,9 +133,6 @@ onUnmounted(() => {
         </div>
 
       </div>
-
-      <!-- Terminal Sync + Action Explainer -->
-      <Terminal />
 
     </div>
 

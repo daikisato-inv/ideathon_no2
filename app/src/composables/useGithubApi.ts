@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 import { useGithubStore } from '../stores/githubStore'
 import { useGitStore } from '../stores/gitStore'
-import { useTerminal } from './useTerminal'
 
 const modalVisible = ref(false)
 const modalError = ref('')
@@ -14,7 +13,6 @@ function ghFetch(url: string, token: string) {
 export function useGithubApi() {
   const gh = useGithubStore()
   const git = useGitStore()
-  const { print } = useTerminal()
 
   async function authenticate(token: string): Promise<void> {
     modalLoading.value = true
@@ -27,7 +25,6 @@ export function useGithubApi() {
       modalVisible.value = false
       modalError.value = ''
       await loadRepos()
-      print('info', `✅ GitHub: @${user.login}`)
     } finally {
       modalLoading.value = false
     }
@@ -45,17 +42,13 @@ export function useGithubApi() {
   async function onRepoSelect(fullName: string): Promise<void> {
     if (!fullName || !gh.token) return
     gh.activeRepo = fullName
-    print('info', `📦 ${fullName}`)
     try {
       const res = await ghFetch(`https://api.github.com/repos/${fullName}/commits?per_page=10`, gh.token)
       const commits = await res.json() as { sha: string; commit: { message: string } }[]
       git.rr = commits.map(c => ({ hash: c.sha.slice(0, 7), msg: c.commit.message.split('\n')[0], files: [] }))
       const watch = (await import('../stores/watchStore')).useWatchStore()
       if (git.rr.length) watch.remoteTrackHash = git.rr[0].hash
-      print('output', `  ${git.rr.length}件のコミットを取得`)
-    } catch (e: unknown) {
-      print('error', '取得失敗: ' + (e as Error).message)
-    }
+    } catch {}
   }
 
   function openModal(): void { modalVisible.value = true; modalError.value = '' }
@@ -63,7 +56,6 @@ export function useGithubApi() {
 
   function logout(): void {
     gh.logout()
-    print('output', 'GitHubからログアウトしました')
   }
 
   return { modalVisible, modalError, modalLoading, authenticate, loadRepos, onRepoSelect, openModal, closeModal, logout }
