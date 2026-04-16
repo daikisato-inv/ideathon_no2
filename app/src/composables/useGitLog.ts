@@ -17,21 +17,64 @@ function parseBranchLogLine(line: string): BranchLogEntry | null {
   if (!m) return null
   const msg = m[4].replace(/^(commit: |merge: |Merge: )/, '')
   if (GIT_LOG_SKIP.some(p => msg.startsWith(p))) return null
-  return { from: m[1].slice(0, 7), hash: m[2].slice(0, 7), time: +m[3], msg }
+  return { from: m[1].slice(0, 7), hash: m[2].slice(0, 7), fullHash: m[2], time: +m[3], msg }
+}
+
+/**
+ * Read a loose git commit object and return its parent hash (7 chars).
+ * Git objects are zlib-compressed. We strip the 2-byte zlib header and
+ * decompress with DecompressionStream('deflate-raw'), then parse the parent line.
+ * Returns null if the object is packed or cannot be read.
+ */
+async function readCommitParent(gitHandle: FileSystemDirectoryHandle, fullHash: string): Promise<string | null> {
+  try {
+    const objDir = await gitHandle.getDirectoryHandle('objects')
+    const subDir = await objDir.getDirectoryHandle(fullHash.slice(0, 2))
+    const file = await (await subDir.getFileHandle(fullHash.slice(2))).getFile()
+    const buffer = await file.arrayBuffer()
+
+    // Strip 2-byte zlib header, then decompress raw deflate stream
+    const ds = new DecompressionStream('deflate-raw')
+    const writer = ds.writable.getWriter()
+    writer.write(new Uint8Array(buffer, 2))
+    writer.close()
+
+    const chunks: Uint8Array[] = []
+    const reader = ds.readable.getReader()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+    }
+
+    const total = chunks.reduce((n, c) => n + c.length, 0)
+    const combined = new Uint8Array(total)
+    let off = 0
+    for (const c of chunks) { combined.set(c, off); off += c.length }
+
+    const text = new TextDecoder().decode(combined)
+    const parentLine = text.split('\n').find(l => l.startsWith('parent '))
+    return parentLine ? parentLine.slice(7, 14) : null  // 7-char hash
+  } catch {
+    return null
+  }
 }
 
 /**
  * Read and parse all log entries from a FileSystemDirectoryHandle directory.
  * Each file maps to one branch entry in the result.
+ * If gitHandle is provided, from=0000000 entries are resolved to the actual
+ * parent commit hash by reading the git commit object directly.
  */
 async function readBranchLogsFromDir(
   dir: FileSystemDirectoryHandle,
-  namePrefix = ''
+  namePrefix = '',
+  gitHandle?: FileSystemDirectoryHandle
 ): Promise<Map<string, BranchLogEntry[]>> {
   const result = new Map<string, BranchLogEntry[]>()
   for await (const [name, handle] of (dir as FileSystemDirectoryHandle & AsyncIterable<[string, FileSystemHandle]>).entries()) {
     if (handle.kind === 'directory') {
-      const sub = await readBranchLogsFromDir(handle as FileSystemDirectoryHandle, namePrefix + name + '/')
+      const sub = await readBranchLogsFromDir(handle as FileSystemDirectoryHandle, namePrefix + name + '/', gitHandle)
       for (const [k, v] of sub) result.set(k, v)
     } else {
       try {
@@ -41,6 +84,14 @@ async function readBranchLogsFromDir(
           if (entry) acc.push(entry)
           return acc
         }, [])
+        // Resolve from=0000000 (new branch push) to actual parent commit hash
+        if (gitHandle) {
+          const initial = entries.find(e => e.from === '0000000')
+          if (initial) {
+            const parent = await readCommitParent(gitHandle, initial.fullHash)
+            if (parent) initial.from = parent
+          }
+        }
         if (entries.length) result.set(namePrefix + name, entries)
       } catch {}
     }
@@ -161,7 +212,7 @@ export async function readAllBranchLogs(): Promise<Map<string, BranchLogEntry[]>
       .getDirectoryHandle('logs')
       .then(d => d.getDirectoryHandle('refs'))
       .then(d => d.getDirectoryHandle('heads'))
-    return readBranchLogsFromDir(headsDir)
+    return readBranchLogsFromDir(headsDir, '', watch.gitHandle!)
   } catch { return new Map() }
 }
 
@@ -175,6 +226,6 @@ export async function readAllRemoteBranchLogs(): Promise<Map<string, BranchLogEn
       .then(d => d.getDirectoryHandle('refs'))
       .then(d => d.getDirectoryHandle('remotes'))
       .then(d => d.getDirectoryHandle('origin'))
-    return readBranchLogsFromDir(originDir, 'origin/')
+    return readBranchLogsFromDir(originDir, 'origin/', watch.gitHandle!)
   } catch { return new Map() }
 }
