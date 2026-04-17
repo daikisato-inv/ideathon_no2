@@ -40,7 +40,7 @@ const showFlowGraph = computed(() => isCommitZone.value && (!!props.dagCommits?.
 const showBranchGraph = computed(() => isCommitZone.value && !props.branchLogs && !!props.commits?.length)
 const isEmpty = computed(() => {
   if (isFileZone.value) return !props.files?.length
-  if (showFlowGraph.value) return !props.branchLogs?.size
+  if (showFlowGraph.value) return false  // FlowGraph handles its own empty state
   return !props.commits?.length
 })
 </script>

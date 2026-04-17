@@ -32,8 +32,9 @@ app/
 
 ```
 [ ローカル境界 ]                      [ リモート境界 ]
- WD → SA → LR  →(push)→  RT  ←(fetch)←  RR
-               ←(merge)←      →(pull)→
+ WD → SA → LR  ←(merge)←  RT  →(push)→ RR
+               ←(pull)←       ←(fetch)←  
+                               ←(pull)←  
 ```
 
 | ゾーン | 名称 | データソース | ZoneType |
@@ -67,10 +68,31 @@ interface CommitEntry {
 }
 
 interface BranchLogEntry {
-  from: string   // 親コミットハッシュ
-  hash: string   // コミットハッシュ
-  time: number   // Unixタイムスタンプ
-  msg: string    // コミットメッセージ
+  from: string      // 親コミットハッシュ
+  hash: string      // コミットハッシュ（7文字）
+  fullHash: string  // 40文字フルハッシュ（コミットオブジェクト参照用）
+  time: number      // Unixタイムスタンプ
+  msg: string       // コミットメッセージ
+}
+
+interface DagCommit {
+  hash: string       // 7文字
+  fullHash: string   // 40文字
+  parents: string[]  // 親ハッシュ（7文字）
+  refs: string[]     // ['main', 'origin/dev', 'v1.0'] 等
+  message: string
+  author: string
+  time: number
+}
+
+interface LaneRow {
+  commit: DagCommit
+  col: number
+  color: string
+  lanesBefore: string[]   // レーンごとの期待ハッシュ（''=空）
+  lanesAfter: string[]
+  colorsBefore: string[]
+  colorsAfter: string[]
 }
 ```
 
@@ -109,7 +131,7 @@ GitHub API認証・リポジトリ情報を保持。
 | `useGitIndex.ts` | `.git/index` バイナリを `parseGitIndex()` でパース（DIRC形式、SHA1抽出） |
 | `useGitLog.ts` | `.git/logs/HEAD` / `refs/remotes/origin/*` を読み込み `BranchLogEntry[]` に変換 |
 | `useGitPolling.ts` | 800msインターバルで `pollAll()` → `pollFiles()` + `pollGit()` を実行 |
-| `useTerminal.ts` | `lines: ref<TermLine[]>`（最大120行）を管理。`print(type, text)` で追記 |
+| `useGitDag.ts` | `buildDag(gitHandle, max=200)` でlooseオブジェクトからDAG構築。`computeLanes(commits)` でSVGレンダリング用レーン割り当て（`LaneRow[]`）生成 |
 | `useGithubApi.ts` | `authenticate(token)` → `loadRepos()` → `onRepoSelect()` でRRゾーンを更新 |
 | `useBranchConfig.ts` | `getBranchColor(name)` / `getBranchOrder(name)` でブランチ可視化設定を提供 |
 
@@ -123,37 +145,23 @@ GitHub API認証・リポジトリ情報を保持。
 
 | ファイル | 役割 |
 |---|---|
-| `App.vue` | レイアウト全体。ヘッダー + ローカルボックス + リモートボックス + ターミナル + ステータスバー。ブランチログを2秒ごとに再取得 |
+| `App.vue` | レイアウト全体。ヘッダー + ローカルボックス + リモートボックス + ステータスバー。ブランチログを2秒ごとに再取得し `dagCommits` を `buildDag()` で更新 |
 | `AppHeader.vue` | フォルダ選択ボタン、GitHub認証トグル・ログイン・ログアウト、リポジトリドロップダウン |
 | `GitZone.vue` | ゾーンコンテナ。WD/SAはFileCard、LR/RT/RRはFlowGraphまたはBranchGraphを表示 |
 | `FileCard.vue` | ファイル表示（絵文字アイコン + ステータスバッジ）。色: untracked=緑, modified=黄, deleted=赤, staged=青 |
-| `FlowGraph.vue` | SVGブランチグラフ（レーン + ベジェ曲線 + コミットノード + ホバーtoolrtip） |
+| `FlowGraph.vue` | SVGブランチグラフ。`dagCommits` prop（優先）または `branchLogs` fallback で描画。`computeLanes()` でレーン割り当て → ベジェ曲線・refバッジ・ホバーtooltip |
 | `BranchGraph.vue` | シンプルなコミット縦リスト（●マーカー + ハッシュ + メッセージ） |
-| `Terminal.vue` | gitアクションログ表示（カラーコーディング + 矢印キー履歴ナビゲーション） |
 | `GhModal.vue` | PAT入力フォーム（生成手順の案内 + エラー表示） |
 | `StatusBar.vue` | フォルダ接続状態（緑点滅）、GitHub認証状態、現在ブランチ、ポーリング間隔 |
 | `CompatBanner.vue` | File System Access API 非対応時の警告バナー（Chrome/Edge必須） |
 
 ## ブランチグラフ（FlowGraph.vue）
 
-- LR・RT・RR の3ゾーンをまたいで共通Y軸のブランチレーンが貫通
-- コミットノード（●）の位置で **Ahead**（LRにあってRTにない）/ **Behind** を視覚化
-- 全ブランチ・全ノードを表示（特定ブランチに限定しない）
-- ブランチカラー: `main`=赤, `develop`=青, `feature`=紫
-- アルゴリズム: `getBranchOrder()` でレーン順序決定 → タイムスタンプでX座標等分割 → マージ/分岐をベジェ曲線で描画
-
-## Terminal Sync / Action Explainer
-
-操作を検知した際、以下を表示する（Terminal コンポーネント）:
-
-| 検知イベント | 表示コマンド | 説明 |
-|---|---|---|
-| ファイルがステージされた | `$ git add <filename>` | WD → SA |
-| アンステージされた | `$ git restore --staged <filename>` | SA → WD |
-| コミット検知 | `$ git commit -m "<msg>"` | SA → LR |
-| push検知 | `$ git push origin <branch>` | LR → RT |
-| fetch検知 | `$ git fetch origin` | RR → RT |
-| pull検知 | `$ git pull origin <branch>` | RT → LR |
+- `dagCommits` prop（`DagCommit[]`）優先。未供給時は `branchLogs` fallbackでレガシーレンダリング
+- DAGモード: `computeLanes()` でKahn法トポロジカルソート後レーン割り当て → 縦方向SVG描画
+- レーン幅14px、行高26px。親子間はベジェ曲線で接続
+- refバッジ（ブランチ名・タグ）をコミットノード右に表示
+- ブランチカラー: `useBranchConfig` 経由（`main`=赤, `develop`=青, `feature`=紫）、未割り当ては `LANE_PALETTE` 10色ローテーション
 
 ## スタイリング（style.css）
 
@@ -173,16 +181,17 @@ zone-working: blue, zone-staging: orange, zone-local: green, zone-remote: purple
 - **GitHub認証**: 現状はPAT方式（`localStorage` 保存）。将来OAuth/GitHub App移行予定
 - **バイナリ解析**: `.git/index` はDIRC形式（magic + version + entry数 + エントリーごとにSHA1・ファイル名・パディング）
 - **reflogパターン**: `^([0-9a-f]{40}) ([0-9a-f]{40}) .+?(\d{10}) [+-]\d{4}\t(.+)$`（checkout/reset/cloneはフィルタ除外）
-- **パフォーマンス**: 800msポーリング、ブランチログは2秒ごとに再取得、SVGグラフはブランチログ変化時のみ再描画
+- **パフォーマンス**: 800msポーリング、ブランチログ+DAGは2秒ごとに再取得、SVGグラフはデータ変化時のみ再描画
+- **DAG制限**: `buildDag()` は最大200コミット。packed objectsは読み取り不可（looseオブジェクトのみ）
 
 ## Git ブランチ戦略（本リポジトリ）
 
 ```
-main   ----●------------>●--->
-            \           ↑
-develop   ●-->●-->●-->●-->●
-               ↑      ↑
-feature        ●-->●-->●
+main   ----●------->●------>●--->
+            \              /
+develop   ●-->●-->●-->●-->●-->●
+               \     /
+feature         ●-->●
 ```
 
 | ブランチ | 役割 |

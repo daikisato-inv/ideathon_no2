@@ -211,10 +211,13 @@ function drawLaneRow(
   // ── Commit node ───────────────────────────────────────────────────────────
   const headHash = git.lr.length ? git.lr[git.lr.length - 1].hash : null
   const isHead = row.commit.hash === headHash
+  const isPacked = row.commit.time === 0 && row.commit.message === ''
   svg.appendChild(svgNs('circle', {
     cx, cy, r: R,
-    fill: isHead ? '#ffffff' : row.color,
+    fill: isPacked ? 'none' : (isHead ? '#ffffff' : row.color),
     stroke: row.color, 'stroke-width': isHead ? 2 : 1.5,
+    'stroke-dasharray': isPacked ? '2,2' : 'none',
+    opacity: isPacked ? 0.5 : 1,
     'data-hash': row.commit.hash,
     'data-msg': row.commit.message,
     'data-branch': row.commit.refs.join(', '),
@@ -409,15 +412,23 @@ function setupTooltipEvents(svg: SVGSVGElement): void {
 }
 
 // ── Main render ───────────────────────────────────────────────────────────────
+function isPackedStub(c: DagCommit): boolean { return c.time === 0 && c.message === '' }
+
 function renderGraph(): void {
   const svg = svgEl.value; if (!svg) return
   svg.innerHTML = ''
 
-  if (props.dagCommits?.length) {
-    const rows = computeLanes(props.dagCommits)
-    renderLaneGraph(svg, rows)
+  // Use DAG rendering only when real (loose) commits exist.
+  // Packed-only stubs have no parent connections so they render as
+  // disconnected dots — fall back to branchLogs in that case.
+  const realCommits = props.dagCommits?.filter(c => !isPackedStub(c)) ?? []
+  if (realCommits.length) {
+    renderLaneGraph(svg, computeLanes(props.dagCommits!))
   } else if (props.branchLogs?.size) {
     renderOldGraph(svg, props.branchLogs)
+  } else if (props.dagCommits?.length) {
+    // Only stubs available — render as last resort
+    renderLaneGraph(svg, computeLanes(props.dagCommits))
   } else {
     return
   }

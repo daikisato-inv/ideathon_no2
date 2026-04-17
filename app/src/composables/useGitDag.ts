@@ -5,6 +5,7 @@
  */
 import type { DagCommit, LaneRow } from '../types'
 import { getBranchColor } from './useBranchConfig'
+import { decompressGitObject } from './useFileSystem'
 
 // ── Internal helpers ─────────────────────────────────────────────────────────
 
@@ -12,21 +13,6 @@ const LANE_PALETTE = [
   '#4a9eff', '#e8c830', '#e91e8c', '#2ecc71',
   '#e74c3c', '#a78bfa', '#ff9800', '#00bcd4', '#ff5722', '#26c6da',
 ]
-
-async function decompress(buf: ArrayBuffer): Promise<string> {
-  const ds = new DecompressionStream('deflate-raw')
-  const w = ds.writable.getWriter()
-  w.write(new Uint8Array(buf, 2))
-  w.close()
-  const parts: Uint8Array[] = []
-  const r = ds.readable.getReader()
-  for (;;) { const { done, value } = await r.read(); if (done) break; parts.push(value) }
-  const n = parts.reduce((s, p) => s + p.length, 0)
-  const out = new Uint8Array(n)
-  let off = 0
-  for (const p of parts) { out.set(p, off); off += p.length }
-  return new TextDecoder().decode(out)
-}
 
 async function readCommitObj(
   git: FileSystemDirectoryHandle, fh: string
@@ -37,7 +23,7 @@ async function readCommitObj(
       .then(d => d.getDirectoryHandle(fh.slice(0, 2)))
       .then(d => d.getFileHandle(fh.slice(2)))
       .then(h => h.getFile())
-    const text = await decompress(await f.arrayBuffer())
+    const text = await decompressGitObject(await f.arrayBuffer())
     const lines = text.split('\n')
     const parents: string[] = []
     let author = '', time = 0, message = '', body = false
@@ -106,11 +92,18 @@ export async function buildDag(
   while (queue.length && cmap.size < max) {
     const fh = queue.shift()!
     const raw = await readCommitObj(git, fh)
-    if (!raw) continue
     const hash = fh.slice(0, 7)
     const refs = (refMap.get(fh) ?? [])
       .filter(r => r.startsWith('refs/heads/') || r.startsWith('refs/tags/') || r.startsWith('refs/remotes/'))
       .map(r => r.replace(/^refs\/(heads|tags|remotes)\//, ''))
+    if (!raw) {
+      // Packed object: readable as a ref but commit content unavailable.
+      // Create a stub node so branch tips stay visible and merge lines connect.
+      if (refs.length > 0 && !cmap.has(hash)) {
+        cmap.set(hash, { hash, fullHash: fh, parents: [], refs, message: '', author: '', time: 0 })
+      }
+      continue
+    }
     cmap.set(hash, {
       hash, fullHash: fh,
       parents: raw.parents.map(p => p.slice(0, 7)),
