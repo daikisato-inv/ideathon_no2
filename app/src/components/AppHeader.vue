@@ -37,20 +37,18 @@ function onInputFocus() {
   dropOpen.value = true
 }
 
+function closeDropdown() {
+  dropOpen.value = false
+  repoSearch.value = gh.activeRepo ?? ''
+}
+
 function onInputBlur() {
   // delay to allow click on option to fire first
-  setTimeout(() => {
-    dropOpen.value = false
-    // restore selected name if user blurs without selecting
-    repoSearch.value = gh.activeRepo ?? ''
-  }, 150)
+  setTimeout(closeDropdown, 150)
 }
 
 function onClickOutside(e: MouseEvent) {
-  if (comboEl.value && !comboEl.value.contains(e.target as Node)) {
-    dropOpen.value = false
-    repoSearch.value = gh.activeRepo ?? ''
-  }
+  if (comboEl.value && !comboEl.value.contains(e.target as Node)) closeDropdown()
 }
 
 onMounted(() => document.addEventListener('mousedown', onClickOutside))

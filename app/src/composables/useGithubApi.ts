@@ -2,7 +2,6 @@ import { ref } from 'vue'
 import { useGithubStore } from '../stores/githubStore'
 import { useGitStore } from '../stores/gitStore'
 
-const modalVisible = ref(false)
 const modalError = ref('')
 const modalLoading = ref(false)
 
@@ -22,7 +21,6 @@ export function useGithubApi() {
       const user = await res.json() as { login: string; avatar_url: string }
       gh.saveToken(token)
       gh.user = user
-      modalVisible.value = false
       modalError.value = ''
       await loadRepos()
     } finally {
@@ -51,12 +49,9 @@ export function useGithubApi() {
     } catch {}
   }
 
-  function openModal(): void { modalVisible.value = true; modalError.value = '' }
-  function closeModal(): void { modalVisible.value = false }
-
   function logout(): void {
     gh.logout()
   }
 
-  return { modalVisible, modalError, modalLoading, authenticate, loadRepos, onRepoSelect, openModal, closeModal, logout }
+  return { modalError, modalLoading, authenticate, loadRepos, onRepoSelect, logout }
 }

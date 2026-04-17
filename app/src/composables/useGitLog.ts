@@ -1,6 +1,6 @@
 import { useWatchStore } from '../stores/watchStore'
 import type { CommitEntry, BranchLogEntry } from '../types'
-import { readTextFile } from './useFileSystem'
+import { readTextFile, decompressGitObject } from './useFileSystem'
 
 function getWatch() { return useWatchStore() }
 
@@ -31,28 +31,7 @@ async function readCommitParent(gitHandle: FileSystemDirectoryHandle, fullHash: 
     const objDir = await gitHandle.getDirectoryHandle('objects')
     const subDir = await objDir.getDirectoryHandle(fullHash.slice(0, 2))
     const file = await (await subDir.getFileHandle(fullHash.slice(2))).getFile()
-    const buffer = await file.arrayBuffer()
-
-    // Strip 2-byte zlib header, then decompress raw deflate stream
-    const ds = new DecompressionStream('deflate-raw')
-    const writer = ds.writable.getWriter()
-    writer.write(new Uint8Array(buffer, 2))
-    writer.close()
-
-    const chunks: Uint8Array[] = []
-    const reader = ds.readable.getReader()
-    while (true) {
-      const { done, value } = await reader.read()
-      if (done) break
-      chunks.push(value)
-    }
-
-    const total = chunks.reduce((n, c) => n + c.length, 0)
-    const combined = new Uint8Array(total)
-    let off = 0
-    for (const c of chunks) { combined.set(c, off); off += c.length }
-
-    const text = new TextDecoder().decode(combined)
+    const text = await decompressGitObject(await file.arrayBuffer())
     const parentLine = text.split('\n').find(l => l.startsWith('parent '))
     return parentLine ? parentLine.slice(7, 14) : null  // 7-char hash
   } catch {

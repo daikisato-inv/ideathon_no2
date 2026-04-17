@@ -1,6 +1,25 @@
 import { useWatchStore } from '../stores/watchStore'
 import { useGitStore } from '../stores/gitStore'
 
+/**
+ * Strip the 2-byte zlib header and decompress a raw deflate stream.
+ * Used for reading loose git objects (.git/objects/xx/yyyyyy).
+ */
+export async function decompressGitObject(buf: ArrayBuffer): Promise<string> {
+  const ds = new DecompressionStream('deflate-raw')
+  const w = ds.writable.getWriter()
+  w.write(new Uint8Array(buf, 2))
+  w.close()
+  const parts: Uint8Array[] = []
+  const r = ds.readable.getReader()
+  for (;;) { const { done, value } = await r.read(); if (done) break; parts.push(value) }
+  const n = parts.reduce((s, p) => s + p.length, 0)
+  const out = new Uint8Array(n)
+  let off = 0
+  for (const p of parts) { out.set(p, off); off += p.length }
+  return new TextDecoder().decode(out)
+}
+
 export function getFileIcon(name: string): string {
   const ext = name.split('.').pop()?.toLowerCase() ?? ''
   const map: Record<string, string> = {
@@ -50,9 +69,8 @@ export function useFileSystem() {
     try {
       const dir = await (window as Window & { showDirectoryPicker: (o?: object) => Promise<FileSystemDirectoryHandle> }).showDirectoryPicker({ mode: 'read' })
       await connectFolder(dir)
-    } catch (e: unknown) {
-      const err = e as { name?: string; message?: string }
-      if (err.name !== 'AbortError') return
+    } catch {
+      // AbortError = user cancelled; other errors silently ignored
     }
   }
 
